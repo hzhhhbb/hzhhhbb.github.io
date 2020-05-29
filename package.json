@@ -20,7 +20,7 @@
     "stylelint-check": "stylelint-config-prettier-check"
   },
   "dependencies": {
-    "minimist": ">=0.2.1",
+    "minimist": ">=1.2.3",
     "kind-of": ">=6.0.3",
     "set-value": ">=2.0.1"
   }
