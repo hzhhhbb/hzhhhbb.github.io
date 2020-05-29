@@ -6,3 +6,4 @@ assets/css/just-the-docs.scss
 assets/js/vendor/lunr.min.js
 assets/js/search-data.json
 assets/js/just-the-docs.js
+_sass/support/_variables.scss
