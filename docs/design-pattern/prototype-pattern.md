@@ -1,7 +1,7 @@
 ---
 layout: default
 title: 原型模式
-nav_order: 1
+nav_order: 2
 parent: 设计模式
 description: "原型模式"
 ---
