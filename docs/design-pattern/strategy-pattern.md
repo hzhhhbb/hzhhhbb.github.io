@@ -7,7 +7,7 @@ description: "策略模式"
 ---
 
 # 策略模式
-此文章第一次发布于[博客园]https://www.cnblogs.com/hzhhhbb/p/11538083.html)
+此文章第一次发布于[博客园](https://www.cnblogs.com/hzhhhbb/p/11538083.html)
 
 ## 引言
 在讲策略模式之前，我们来看零售行业软件的一个针对客户类型打折的功能。
