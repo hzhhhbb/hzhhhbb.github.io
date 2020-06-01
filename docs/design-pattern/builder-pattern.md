@@ -1,7 +1,7 @@
 ---
 layout: default
 title: 建造者模式
-nav_order: 2
+nav_order: 3
 parent: 设计模式
 description: "建造者模式"
 ---
@@ -68,7 +68,9 @@ namespace BuilderPattern
     }
 }
 ```
+
 2. 再来一个抽象Builder、两个具体的Builder
+
 ```csharp
 namespace BuilderPattern
 {
