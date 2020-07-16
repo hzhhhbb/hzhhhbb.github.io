@@ -21,6 +21,6 @@ git config --global https.proxy socks5://127.0.0.1:1086
 c:\user\username\.gitconfig
 ```
 
-## 修改成下图
+### 修改成下图
 ![](/assets/images/docs/git/use-proxy/modify-file.png "配置代理")
 
