@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>demo · 本体语义层落地示例</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .flow { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; margin:1.4rem 0; }
+  .flow .f { flex:1; min-width:140px; padding:.9rem 1rem; border:1px solid var(--rule); border-radius:6px; background:var(--paper-elev); }
+  .flow .f.wh { border-color:var(--accent); background:var(--accent-soft); }
+  .flow .f .k { font-family:var(--font-mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; }
+  .flow .f .v { font-family:var(--font-body); font-size:.95rem; color:var(--ink); margin-top:.35rem; }
+</style>
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Demo · 落地示例</p>
+  <h1 class="title">本体语义层落地示例</h1>
+  <p class="subtitle">关系库(系统记录) → 本体语义层 → API / MCP / skill → AI Agent</p>
+
+  <p class="lede">这是一个<strong>能落地、能跑、能接进 AI agent</strong> 的最小完整例子(对应课程 0010)。它把「供应链计划」的数据库事实映射成本体,再暴露成 <strong>API</strong>、<strong>MCP 工具</strong>和 <strong>skill</strong>,让大语言模型基于<strong>真实事实</strong>回答,而不是靠猜。整仓库源码见 <code>demo/</code>。</p>
+
+  <hr class="rule">
+
+  <!-- ============ 1 架构 ============ -->
+  <h2><span class="num">01</span>架构:四层各司其职</h2>
+  <div class="flow">
+    <div class="f"><div class="k">系统记录</div><div class="v">PostgreSQL(闭世界、事务、权威数据)</div></div>
+    <div class="f"><div class="k">映射</div><div class="v">R2RML / OBDA 对齐本体</div></div>
+    <div class="f wh"><div class="k">本体语义层</div><div class="v">类/属性/公理 + 推理(sc-planning.ttl)</div></div>
+    <div class="f"><div class="k">Agent 接入</div><div class="v">API / MCP / skill</div></div>
+    <div class="f"><div class="k">AI</div><div class="v">大语言模型取事实回答</div></div>
+  </div>
+  <p><strong>关键:</strong>不是替换数据库,而是让语义层"虚拟地"坐在它上面;AI 从语义层取<strong>确定的事实</strong>来回答。</p>
+
+  <!-- ============ 2 本体 ============ -->
+  <h2><span class="num">02</span>本体(语义层)</h2>
+  <p>本体定义"世界里有哪些类、怎么关联、有哪些规则"(<code>ontology/sc-planning.ttl</code>):</p>
+  <div class="triple"><span class="c"># 类层次</span>
+<span class="kw">:FinishedGood</span> <span class="p">rdfs:subClassOf</span> <span class="o">:Product</span> .
+<span class="kw">:CapacityAllocation</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .   <span class="c"># 再化类</span>
+
+<span class="c"># 对象属性(连个体)+ domain/range</span>
+<span class="kw">:requiresProduct</span> <span class="p">a</span> <span class="kw">owl:ObjectProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Order</span> ; <span class="p">rdfs:range</span> <span class="o">:Product</span> .
+
+<span class="c"># 数据属性(连值)</span>
+<span class="kw">:hasLeadTime</span> <span class="p">a</span> <span class="kw">owl:DatatypeProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Product</span> ; <span class="p">rdfs:range</span> <span class="o">xsd:integer</span> .
+
+<span class="c"># 公理</span>
+<span class="kw">:FinishedGood</span> <span class="p">owl:disjointWith</span> <span class="o">:RawMaterial</span> .</div>
+
+  <!-- ============ 3 数据库 + 映射 ============ -->
+  <h2><span class="num">03</span>数据库(系统记录)+ 打通</h2>
+  <p>关系库仍是<strong>权威记录</strong>(<code>db/schema.sql</code>);用 R2RML 把列对准本体(<code>db/mapping.r2rml</code>):</p>
+  <div class="triple"><span class="c"># R2RML 片段:product 表 → :Product 个体</span>
+<span class="kw">:ProductMapping</span> <span class="p">rr:logicalTable</span> <span class="o">[ rr:tableName "product" ]</span> ;
+  <span class="p">rr:subjectMap</span> <span class="o">[ rr:template "http://example.org/sc#product-{product_id}" ; rr:class :Product ]</span> ;
+  <span class="p">rr:predicateObjectMap</span> <span class="o">[ rr:predicate :hasLeadTime ; rr:objectMap [ rr:column "lead_time_days" ] ]</span> .</div>
+  <p class="note-caption">生产级"数据不搬家"用 Ontop(本体数据访问)把 SPARQL 改写成 SQL,数据留在库里。</p>
+
+  <!-- ============ 4 真实运行 ============ -->
+  <h2><span class="num">04</span>真实运行:语义层 + 推理</h2>
+  <p>纯 Python、零依赖(<code>semantic_core.py</code>),本机直接跑。这是真实输出:</p>
+  <div class="triple">==================================================================
+本体语义层 DEMO —— 供应链计划(sc-planning)
+==================================================================
+
+[1] 产品 447 的本体化事实:
+    product-447  a  FinishedGood
+    product-447  :hasLeadTime  14
+
+[3] 意图推理:「7 号线下个月能满足订单 1042 吗?」
+   (事实)  order-1042  a  Order
+   (事实)  order-1042  :requiresProduct  product-447
+   (事实)  order-1042  :hasQuantity  5000
+   (事实)  product-447  :isProducedOn  line-7
+   (事实)  capacity-7-2026-06  a  CapacityAllocation
+   (事实)  capacity-7-2026-06  :hasCapacityValue  1200
+   (推理)  order-1042 需要 447 × 5000; line-7 在 2026-06 产能 1200 ⇒ 不足,排不下
+   => can_fulfill: False | 缺口: 3800</div>
+  <p class="note-caption">看,<strong>大语言模型不必猜</strong>:它拿到的是"订单需要 5000、产能只有 1200"这些<strong>确定事实 + 推理</strong>,于是给出有依据的结论"排不下,缺 3800"。</p>
+
+  <!-- ============ 5 接入 agent ============ -->
+  <h2><span class="num">05</span>接进 AI Agent(API / MCP / skill)</h2>
+  <p>三种组件,把同一套语义层暴露给 agent:</p>
+  <table>
+    <thead><tr><th>组件</th><th>是什么</th><th>怎么用</th></tr></thead>
+    <tbody>
+      <tr><td><strong>API</strong></td><td>FastAPI 把语义层暴露成 REST</td><td><code>uvicorn api.server:app</code>;GET <code>/facts/product/447</code>、<code>/answer/can-fulfill?order_id=1042&amp;period=2026-06</code></td></tr>
+      <tr><td><strong>MCP</strong></td><td>把语义层封装成 agent 可调用的<strong>工具</strong></td><td><code>python3 mcp/server.py</code>;agent 调用 <code>product_facts / order_facts / can_fulfill / query_triples</code></td></tr>
+      <tr><td><strong>skill</strong></td><td>教 agent 领域词汇 + 什么时候调用</td><td>把 <code>skill/sc-planning-agent.md</code> 交给 agent</td></tr>
+    </tbody>
+  </table>
+  <div class="keypoint"><span class="tag">为什么这样接</span><p>agent 通过 MCP 拿到<strong>本体化的确定事实</strong>,再回答——这是"本体驱动的检索增强生成"的最小落地,也是课程 0009/0010 的正解。</p></div>
+
+  <!-- ============ 6 怎么跑 ============ -->
+  <h2><span class="num">06</span>怎么在本地跑</h2>
+  <div class="triple"><span class="c"># 1) 立刻看语义层 + 推理(无需数据库)</span>
+<span class="kw">cd demo</span>
+<span class="kw">python3 semantic_core.py</span>
+
+<span class="c"># 2) 接进 agent(MCP,需 pip install mcp)</span>
+<span class="kw">python3 mcp/server.py</span>
+
+<span class="c"># 3) 起 REST API(需 pip install fastapi uvicorn)</span>
+<span class="kw">uvicorn api.server:app --reload</span>
+
+<span class="c"># 4) 接真实 PostgreSQL</span>
+<span class="kw">docker compose up -d db</span>   <span class="c"># 自动建表 + 灌数据</span></div>
+
+  <hr class="rule">
+  <div class="ask-agent"><span class="tag">源码</span><p>所有文件在仓库 <code>demo/</code>:<a href="ontology/sc-planning.ttl">ontology/sc-planning.ttl</a>、<a href="semantic_core.py">semantic_core.py</a>、<a href="db/schema.sql">db/schema.sql</a>、<a href="db/mapping.r2rml">db/mapping.r2rml</a>、<a href="api/server.py">api/server.py</a>、<a href="mcp/server.py">mcp/server.py</a>、<a href="skill/sc-planning-agent.md">skill/sc-planning-agent.md</a>。有任何卡点或想把真实业务表接进来,直接问 agent。</p></div>
+
+  <nav class="lesson-foot">
+    <a href="../index.html">← 课程首页</a>
+    <a class="next" href="../lessons/0010-integrating-semantic-layer.html">上一课:打通语义层与业务系统 →</a>
+  </nav>
+
+</main>
+</body>
+</html>
