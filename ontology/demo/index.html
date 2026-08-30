@@ -96,7 +96,7 @@
       <tr><td><strong>skill</strong></td><td>教 agent 领域词汇 + 什么时候调用</td><td>把 <code>skill/sc-planning-agent.md</code> 交给 agent</td></tr>
     </tbody>
   </table>
-  <div class="keypoint"><span class="tag">为什么这样接</span><p>agent 通过 MCP 拿到<strong>本体化的确定事实</strong>,再回答——这是"本体驱动的检索增强生成"的最小落地,也是课程 0009/0010 的正解。</p></div>
+  <div class="keypoint"><span class="tag">两种位置,别搞混</span><p><strong>语义层(API/MCP)= 确定的事实+推理服务,无大语言模型</strong>;真正<strong>组装上下文、调用大语言模型</strong> 的是它上面的<strong>编排层</strong>(<code>agent_orchestration.py</code>)——听懂问题→选工具→拿事实→组装 prompt→调大语言模型。agent 正是通过 MCP 拿到<strong>本体化的确定事实</strong>,再据此回答,这才是"本体驱动的检索增强生成"的最小落地(课程 0009/0010 正解)。</p></div>
 
   <!-- ============ 6 怎么跑 ============ -->
   <h2><span class="num">06</span>怎么在本地跑</h2>
@@ -114,7 +114,7 @@
 <span class="kw">docker compose up -d db</span>   <span class="c"># 自动建表 + 灌数据</span></div>
 
   <hr class="rule">
-  <div class="ask-agent"><span class="tag">源码</span><p>所有文件在仓库 <code>demo/</code>:<a href="ontology/sc-planning.ttl">ontology/sc-planning.ttl</a>、<a href="semantic_core.py">semantic_core.py</a>、<a href="db/schema.sql">db/schema.sql</a>、<a href="db/mapping.r2rml">db/mapping.r2rml</a>、<a href="api/server.py">api/server.py</a>、<a href="mcp/server.py">mcp/server.py</a>、<a href="skill/sc-planning-agent.md">skill/sc-planning-agent.md</a>。有任何卡点或想把真实业务表接进来,直接问 agent。</p></div>
+  <div class="ask-agent"><span class="tag">源码</span><p>所有文件在仓库 <code>demo/</code>:<a href="semantic_core.py">semantic_core.py</a>(语义层)、<a href="agent_orchestration.py">agent_orchestration.py</a>(编排层:组上下文+调大语言模型)、<a href="api/server.py">api/server.py</a>、<a href="mcp/server.py">mcp/server.py</a>、<a href="skill/sc-planning-agent.md">skill/sc-planning-agent.md</a>、<a href="ontology/sc-planning.ttl">ontology/sc-planning.ttl</a>、<a href="db/schema.sql">db/schema.sql</a>、<a href="db/mapping.r2rml">db/mapping.r2rml</a>。有任何卡点或想把真实业务表接进来,直接问 agent。</p></div>
 
   <nav class="lesson-foot">
     <a href="../index.html">← 课程首页</a>
