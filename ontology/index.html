@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ontology 课程 · 从概念到落地</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/course.css">
+<style>
+  .courses { max-width: var(--measure); }
+  .course { display:flex; gap:1rem; padding:1rem 0; border-bottom:1px solid var(--rule); align-items:baseline; }
+  .course .n { font-family:var(--font-mono); font-size:0.72rem; color:var(--accent); letter-spacing:.1em; min-width:3.2rem; }
+  .course .t { font-family:var(--font-display); font-weight:600; font-size:1.1rem; text-decoration:none; color:var(--ink); }
+  .course .t:hover { color:var(--accent); }
+  .course .d { font-size:0.9em; color:var(--muted); margin-left:auto; text-align:right; max-width:14rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; margin:1.4rem 0; }
+</style>
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Course · 本体论 0→1</p>
+  <h1 class="title">Ontology 课程</h1>
+  <p class="subtitle">从概念到团队落地 —— 面向资深工程师的本体论(知识工程)课</p>
+
+  <p class="lede">这门课用<strong>你熟悉的领域(供应链计划)</strong>,带你走完本体论:是什么 → 怎么表达 → 怎么推理 → 怎么建 → 怎么用(检索增强生成)→ 怎么带团队 → 怎么打通业务系统。参考:术语表 / 三元组速查。</p>
+
+  <hr class="rule">
+
+  <h2><span class="num">C</span>课程目录</h2>
+  <div class="courses">
+    <div class="course"><span class="n">001</span><a class="t" href="lessons/0001-what-is-an-ontology.html">本体是什么</a><span class="d">从关系表到三元组,开放 vs 闭世界</span></div>
+    <div class="course"><span class="n">002</span><a class="t" href="lessons/0002-classes-hierarchy-and-inference.html">类、层次与推理</a><span class="d">子类/domain-range,推理器补类型</span></div>
+    <div class="course"><span class="n">003</span><a class="t" href="lessons/0003-properties-and-relations.html">属性与关系</a><span class="d">对象/数据属性;类 vs 属性</span></div>
+    <div class="course"><span class="n">004</span><a class="t" href="lessons/0004-constraints-and-axioms.html">用约束建模</a><span class="d">公理:推导与校验</span></div>
+    <div class="course"><span class="n">005</span><a class="t" href="lessons/0005-from-domain-to-ontology.html">从领域到本体</a><span class="d">复用标准,建供应链本体</span></div>
+    <div class="course"><span class="n">006</span><a class="t" href="lessons/0006-query-SPARQL.html">查询与推理</a><span class="d">模式匹配;查不到 ≠ 为假</span></div>
+    <div class="course"><span class="n">007</span><a class="t" href="lessons/0007-ontology-driven-rag.html">本体驱动的 RAG</a><span class="d">治三痛,端到端 + 供应链实例</span></div>
+    <div class="course"><span class="n">008</span><a class="t" href="lessons/0008-when-not-to-use-ontology.html">何时不用本体</a><span class="d">取舍:该用/不该用,分层叠加</span></div>
+    <div class="course"><span class="n">009</span><a class="t" href="lessons/0009-team-adoption-AI-QA.html">团队落地</a><span class="d">本体驱动的 AI 问答,进团队</span></div>
+    <div class="course"><span class="n">010</span><a class="t" href="lessons/0010-integrating-semantic-layer.html">打通语义层与业务系统</a><span class="d">关系库 ↔ 本体 ↔ AI,真实落地</span></div>
+  </div>
+
+  <h2><span class="num">R</span>参考</h2>
+  <div class="grid">
+    <a class="primary-source" href="reference/glossary.html"><span class="ps-label">参考</span><span class="ps-title">术语表</span><span class="ps-url">统一语言 + 缩略语全称</span></a>
+    <a class="primary-source" href="reference/triples.html"><span class="ps-label">参考</span><span class="ps-title">三元组速查</span><span class="ps-url">RDF / Turtle 语法</span></a>
+  </div>
+
+  <h2><span class="num">D</span>落地示例</h2>
+  <p>一个<strong>能落地、能接进 AI agent</strong> 的完整例子(本体 → 语义查询层 → API / MCP / skill):见 <a href="demo/README.md">demo/README.md</a> 与仓库里的 <code>demo/</code> 源码。</p>
+
+  <hr class="rule">
+  <div class="ask-agent">
+    <span class="tag">关于本课程</span>
+    <p>这是一份可打印、可回看的课程。任何概念卡壳,直接向你的 agent 提问;agent 是你的老师。</p>
+  </div>
+
+</main>
+</body>
+</html>

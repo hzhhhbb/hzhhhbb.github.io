@@ -1,0 +1,41 @@
+# sc-planning.ttl
+# 供应链计划本体(语义层)——已经教过你:类、对象/数据属性、domain/range、公理。
+# 这个文件就是 "语义层":系统记录(数据库)通过 R2RML / OBDA 对齐到这里的术语。
+#
+# 命名空间
+@prefix :      <http://example.org/sc#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# ---------- 类层次 ----------
+:SupplyChainObject  a  owl:Class .
+:Product      rdfs:subClassOf  :SupplyChainObject .
+:FinishedGood rdfs:subClassOf  :Product .
+:RawMaterial  rdfs:subClassOf  :Product .
+:Order        rdfs:subClassOf  :SupplyChainObject .
+:Forecast     rdfs:subClassOf  :SupplyChainObject .
+:Resource     rdfs:subClassOf  :SupplyChainObject .
+:Supplier     rdfs:subClassOf  :SupplyChainObject .
+:CapacityAllocation rdfs:subClassOf :SupplyChainObject .   # 再化类(0003)
+
+# ---------- 对象属性(个体 ↔ 个体) + domain / range ----------
+:requiresProduct  a  owl:ObjectProperty ; rdfs:domain :Order    ; rdfs:range :Product .
+:targetsProduct   a  owl:ObjectProperty ; rdfs:domain :Forecast ; rdfs:range :Product .
+:hasSupplier      a  owl:ObjectProperty ; rdfs:domain :Product  ; rdfs:range :Supplier .
+:isProducedOn     a  owl:ObjectProperty ; rdfs:domain :Product  ; rdfs:range :Resource .
+:forResource      a  owl:ObjectProperty ; rdfs:domain :CapacityAllocation ; rdfs:range :Resource .
+
+# ---------- 数据属性(个体 ↔ 值) + domain / range ----------
+:hasLeadTime   a  owl:DatatypeProperty ; rdfs:domain :Product ; rdfs:range xsd:integer .
+:hasQuantity   a  owl:DatatypeProperty ; rdfs:domain :Order  ; rdfs:range xsd:integer .
+:hasPriority   a  owl:DatatypeProperty ; rdfs:domain :Order  ; rdfs:range xsd:string  .
+:forPeriod     a  owl:DatatypeProperty ; rdfs:domain :Forecast ; rdfs:range xsd:string .
+:hasCapacityValue a owl:DatatypeProperty ; rdfs:domain :CapacityAllocation ; rdfs:range xsd:decimal .
+:hasCost       a  owl:DatatypeProperty ; rdfs:domain :CapacityAllocation ; rdfs:range xsd:decimal .
+
+# ---------- 公理(0004) ----------
+:FinishedGood owl:disjointWith :RawMaterial .
+:Order rdfs:subClassOf [
+   a owl:Restriction ; owl:onProperty :requiresProduct ; owl:minCardinality "1"^^xsd:nonNegativeInteger
+] .

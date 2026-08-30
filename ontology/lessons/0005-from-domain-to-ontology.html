@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0005 · 从领域到本体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 05 · 学以致用</p>
+  <h1 class="title">从领域到本体</h1>
+  <p class="subtitle">把供应链计划建成本体 —— 先把一个诀窍记牢:<strong>复用,而不是发明</strong></p>
+
+  <p class="lede">前面几课你学会了本体的"零件与规则"。这一课把它们<strong>用起来</strong>:取供应链计划的一小块,建出一个本体骨架。但开始前,先记住最关键的一条——<strong>多数领域已经有成熟本体,你的首要任务是复用,不是从零造</strong>。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>别从零造:先找现成标准</h2>
+  <p>很多人一上来就自己定义"产品/订单/物料",结果和行业、和别的系统各说各话。正确姿势是<strong>先对齐现成标准</strong>:</p>
+
+  <div class="callout">
+    <span class="tag">供应链的现成标准</span>
+    <p><strong>供应链运作参考(Supply Chain Operations Reference, 简称 SCOR)</strong> 是行业通用框架,分<strong>计划、采购、生产、交付、退货</strong>五大流程。<a href="https://github.com/vocol/scor" target="_blank" rel="noopener">SCORVoc</a> 已把它正式化为一个 Web 本体语言(OWL)词汇——你直接用,就能与行业/系统<strong>共用一套语义</strong>,也让大语言模型更懂你的领域。</p>
+  </div>
+
+  <p><strong>为什么这对接 RAG 特别值:</strong>你的大语言模型应用最怕的"领域词不一致、不懂业务口径",恰恰靠"对齐标准"解决——因为标准就是大家说好的共享词表。</p>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>先切一小块,列概念词表</h2>
+  <p>别贪大。取供应链计划的<strong>一条主线</strong>:<strong>需求(预测)→ 供应(计划)→ 资源(产能)</strong>。先把会用到的东西列出来:</p>
+
+  <table>
+    <thead><tr><th>领域概念</th><th>更像</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>Product / SKU</td><td><strong>类</strong></td><td>被计划的最小单元</td></tr>
+      <tr><td>Order(订单)</td><td><strong>类</strong></td><td>需求侧入口</td></tr>
+      <tr><td>Forecast(预测)</td><td><strong>类</strong></td><td>对未来需求估计,带时段</td></tr>
+      <tr><td>Resource(资源)</td><td><strong>类</strong></td><td>产线、仓库、人力、供应商</td></tr>
+      <tr><td>Capacity(产能)</td><td><strong>类(再化)</strong></td><td>资源×时段×数量,带属性</td></tr>
+      <tr><td>Plan(计划)</td><td><strong>类</strong></td><td>一组"做什么/何时/用多少"的决策</td></tr>
+      <tr><td>hasLeadTime、forPeriod…</td><td><strong>数据属性</strong></td><td>连到值</td></tr>
+      <tr><td>requiresProduct、targetsProduct…</td><td><strong>对象属性</strong></td><td>连到另一个个体</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sidenote"><strong>判断口诀(接 0003):</strong>能自己再挂属性的“关系”→ 做成类;只是值或简单连接 → 属性。</div>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>方法:自上而下 + 自下而上</h2>
+  <p>建模两条腿走路最稳:</p>
+  <ul>
+    <li><strong>自下而上</strong>:把你<strong>现成</strong>的字段/表/接口概念列出来,归类。你数据库里已有 <code>product_id</code>、<code>lead_time</code>,这就是素材。</li>
+    <li><strong>自上而下</strong>:再把这些归进<strong>层次与关系</strong>——<code>Product</code> 下分成品/原材料,订单连到产品……</li>
+  </ul>
+  <p>先自下(有多少素材),再自上(怎么归层),就能得到一个既不脱离实际、又有清晰结构的口袋本体。</p>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>骨架:一个供应链计划本体</h2>
+  <p>把上面串起来,就是一个可用的本体骨架。看着它,回想每一条你都在哪课学过:</p>
+
+  <div class="triple"><span class="c"># 类层次</span>
+<span class="kw">:SupplyChainObject</span> <span class="p">a</span> <span class="kw">owl:Class</span> .
+<span class="kw">:Product</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .
+<span class="kw">:FinishedGood</span> <span class="p">rdfs:subClassOf</span> <span class="o">:Product</span> .
+<span class="kw">:RawMaterial</span> <span class="p">rdfs:subClassOf</span> <span class="o">:Product</span> .
+<span class="kw">:Order</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .
+<span class="kw">:Forecast</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .
+<span class="kw">:Plan</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .
+
+<span class="c"># 对象属性(连个体)+ domain/range</span>
+<span class="kw">:requiresProduct</span> <span class="p">a</span> <span class="kw">owl:ObjectProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Order</span> ; <span class="p">rdfs:range</span> <span class="o">:Product</span> .
+<span class="kw">:targetsProduct</span> <span class="p">a</span> <span class="kw">owl:ObjectProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Forecast</span> ; <span class="p">rdfs:range</span> <span class="o">:Product</span> .
+<span class="kw">:allocatesResource</span> <span class="p">a</span> <span class="kw">owl:ObjectProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Plan</span> ; <span class="p">rdfs:range</span> <span class="o">:Resource</span> .
+
+<span class="c"># 数据属性(连值)</span>
+<span class="kw">:hasLeadTime</span> <span class="p">a</span> <span class="kw">owl:DatatypeProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Product</span> ; <span class="p">rdfs:range</span> <span class="o">xsd:integer</span> .
+<span class="kw">:forPeriod</span> <span class="p">a</span> <span class="kw">owl:DatatypeProperty</span> ; <span class="p">rdfs:domain</span> <span class="o">:Forecast</span> ; <span class="p">rdfs:range</span> <span class="o">xsd:string</span> .
+
+<span class="c"># 公理(接 0004)</span>
+<span class="kw">:FinishedGood</span> <span class="p">owl:disjointWith</span> <span class="o">:RawMaterial</span> .
+<span class="kw">:Order</span> <span class="p">rdfs:subClassOf</span> <span class="o">[ a owl:Restriction ; owl:onProperty :requiresProduct ; owl:minCardinality "1"^^xsd:nonNegativeInteger ]</span> .</div>
+  <p class="note-caption">这就是一个能表达"需求→供应→资源"的供应链计划本体。<code>a owl:Class</code>、<code>rdfs:subClassOf</code>、<code>rdfs:domain/range</code>、<code>owl:disjointWith</code>、<code>owl:Restriction</code> —— 每一样你都学过。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 600 240" width="100%" role="img" aria-label="供应链计划本体骨架:订单/预测连到产品,产品连到供应商与资源,计划分配资源">
+      <defs><style>
+        .c1{fill:var(--paper-elev);stroke:var(--ink);stroke-width:1.5;}
+        .c2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5;}
+        .lbl{font-family:var(--font-body);font-size:14px;fill:var(--ink);}
+        .e{stroke:var(--accent);stroke-width:1.5;fill:none;}
+        .et{font-family:var(--font-mono);font-size:10px;fill:var(--accent);}
+      </style></defs>
+      <rect class="c1" x="250" y="96" width="120" height="42" rx="8"/><text class="lbl" x="310" y="122">Product</text>
+      <rect class="c2" x="40" y="40" width="130" height="40" rx="8"/><text class="lbl" x="105" y="65">Order</text>
+      <rect class="c2" x="40" y="150" width="130" height="40" rx="8"/><text class="lbl" x="105" y="175">Forecast</text>
+      <rect class="c2" x="250" y="180" width="120" height="40" rx="8"/><text class="lbl" x="310" y="205">Supplier</text>
+      <rect class="c2" x="450" y="40" width="120" height="40" rx="8"/><text class="lbl" x="510" y="65">Plan</text>
+      <rect class="c2" x="450" y="150" width="120" height="40" rx="8"/><text class="lbl" x="510" y="175">Resource</text>
+      <line class="e" x1="170" y1="58" x2="250" y2="104"/><text class="et" x="196" y="72">requires</text>
+      <line class="e" x1="170" y1="168" x2="250" y2="136"/><text class="et" x="196" y="160">targets</text>
+      <line class="e" x1="310" y1="138" x2="310" y2="180"/><text class="et" x="316" y="162">hasSupplier</text>
+      <line class="e" x1="450" y1="58" x2="450" y2="150"/><text class="et" x="456" y="106">allocates</text>
+      <line class="e" x1="370" y1="118" x2="450" y2="150"/><text class="et" x="392" y="140">madeOn</text>
+    </svg>
+    <p class="figcap">图 1 · 一个供应链计划本体骨架:类、对象属性(实线连边)、类层次。每一条边都能写成三元组。</p>
+  </div>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">学供应链计划本体,首选做法是什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,有成熟标准(SCORVoc)值得先对齐复用。">从零发明一套词表</button>
+      <button class="opt" data-correct="true" data-fb="对,先对齐行业标准(如 SCORVoc)再裁剪,最省事又能互操作。">复用现成标准再裁剪</button>
+      <button class="opt" data-fb="不对,仅提升个别字段并不算建模。">只给几个字段改名</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">「供应商对某物料的供货」本身还带数量与日期,应做成?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不够,连接带属性时应提升为类。">对象属性</button>
+      <button class="opt" data-correct="true" data-fb="对,带属性的关系要再化成类(reification)。">再化成类</button>
+      <button class="opt" data-fb="不只是数值,连接还有其他属性。">数据属性</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">对齐 SCORVoc 这类标准,对接大语言模型(RAG)主要好处是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="错,标准不直接让你表更多。">让数据库表变更多</button>
+      <button class="opt" data-fb="错,共享语义/机器可读才是重点。">让写代码更省行数</button>
+      <button class="opt" data-correct="true" data-fb="对,共享语义+机器可读,让大语言模型更懂你的领域、口径一致。">机器可读共享语义</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://github.com/vocol/scor" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 复用优先</span>
+    <span class="ps-title">SCORVoc:供应链运作参考(SCOR)的正式本体词汇</span>
+    <span class="ps-url">github.com/vocol/scor</span>
+    <span class="ps-why">看它如何把五大流程、性能指标、实践正式化为 Web 本体语言(OWL)词汇——这就是"对齐标准"的活例子。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">建第一个本体的方法,可回看 <a href="https://protege.stanford.edu/publications/ontology_development/ontology101.pdf" target="_blank" rel="noopener">Ontology Development 101</a>;语法速查见 <a href="../reference/triples.html">三元组速查</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] SCORVoc(供应链运作参考 SCOR 的本体词汇)。</p>
+    <p id="ref2">[2] 万维网联盟(World Wide Web Consortium, W3C),<em>Web 本体语言(OWL)入门</em> —— 类、属性、限制、推理。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课是"动手课"。你可以拿你真实的供应链计划字段清单给我,我帮你<strong>一起按"自下而上 → 自上而下"建一个真正的本体骨架</strong>——这正是通向你 RAG 应用的那一层语义底座。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0004-constraints-and-axioms.html">← 上一课:用约束建模</a>
+    <a class="next" href="../reference/glossary.html">下一课:查询与推理(0006)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

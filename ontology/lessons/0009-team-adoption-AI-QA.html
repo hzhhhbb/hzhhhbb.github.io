@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0009 · 团队落地:本体驱动的 AI 问答</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 09 · 团队落地</p>
+  <h1 class="title">团队落地:本体驱动的 AI 问答</h1>
+  <p class="subtitle">给"多模块、跨系统"的供应链计划团队,一套低风险、可衡量的落地法</p>
+
+  <p class="lede">前面八课你学会了本体。这一课讲<strong>怎么带回团队</strong>:在一个<strong>多模块、跨系统</strong>的供应链计划环境里,用本体把团队的 AI 问答/报告变得<strong>有依据、口径一致</strong>——而且<strong>低风险、可衡量</strong>地落地。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>先锚定:目标与范围</h2>
+  <p>别一上来就"建一个大的供应链本体"。先把它缩小成能衡量的目标:</p>
+  <div class="callout">
+    <span class="tag">目标(说人话)</span>
+    <p>让团队的 AI 问答/报告<strong>有依据地回答、且口径一致</strong>——不做"看几段文本瞎猜"。</p>
+  </div>
+  <p><strong>范围</strong>:先做<strong>一个有界上下文的一条问答</strong>(比如需求计划里的"这个 SKU 为什么排不下来?")。跑通、见效、拿到指标,再扩。</p>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>在"多模块跨系统"里,本体是什么角色</h2>
+  <p>你们是多模块(需求/供应/产能)+跨系统(ERP/制造执行系统)的环境。本体的角色是<strong>一座"统一语义层"</strong>——所有模块与系统都指着它说话:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 620 220" width="100%" role="img" aria-label="多模块跨系统共享一个语义层:需求计划/供应计划/产能/ERP/大模型应用都连到中央本体">
+      <defs><style>
+        .mod{fill:var(--paper-elev);stroke:var(--ink);stroke-width:1.4;}
+        .core{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.8;}
+        .lb{font-family:var(--font-body);font-size:13px;fill:var(--ink);text-anchor:middle;}
+        .e{stroke:var(--accent);stroke-width:1.4;fill:none;}
+      </style></defs>
+      <rect class="mod" x="10" y="20" width="120" height="40" rx="8"/><text class="lb" x="70" y="45">需求计划</text>
+      <rect class="mod" x="150" y="20" width="130" height="40" rx="8"/><text class="lb" x="215" y="45">供应计划</text>
+      <rect class="mod" x="10" y="150" width="130" height="40" rx="8"/><text class="lb" x="75" y="175">产能/排产</text>
+      <rect class="mod" x="160" y="150" width="120" height="40" rx="8"/><text class="lb" x="220" y="175">ERP / MES</text>
+      <rect class="core" x="290" y="80" width="160" height="60" rx="10"/><text class="lb" x="370" y="106">本体 · 语义层</text><text class="lb" x="370" y="126">(知识图谱)</text>
+      <rect class="mod" x="470" y="45" width="140" height="40" rx="8"/><text class="lb" x="540" y="70">大模型问答</text>
+      <rect class="mod" x="470" y="140" width="140" height="40" rx="8"/><text class="lb" x="540" y="165">大模型报告</text>
+      <line class="e" x1="80" y1="60" x2="330" y2="88"/>
+      <line class="e" x1="215" y1="60" x2="330" y2="92"/>
+      <line class="e" x1="80" y1="150" x2="330" y2="112"/>
+      <line class="e" x1="220" y1="150" x2="330" y2="112"/>
+      <line class="e" x1="450" y1="105" x2="470" y2="70"/>
+      <line class="e" x1="450" y1="112" x2="470" y2="152"/>
+    </svg>
+    <p class="figcap">图 1 · 多个模块/系统都指着同一个语义层说话;大模型应用从语义层取事实,而不是各说各话。</p>
+  </div>
+
+  <p><strong>团队收益:</strong>跨系统口径不再打架(计划叫 SKU、ERP 叫产品,语义层统一);AI 问答/报告有共同依据;新成员靠这张"语义图"快速上手。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>三步落地(从轻到重)</h2>
+  <table>
+    <thead><tr><th>步骤</th><th>在"多模块跨系统"里怎么做</th><th>团队收益</th></tr></thead>
+    <tbody>
+      <tr><td><strong>① 词汇层</strong></td><td>挑一个有界上下文(如需求计划),提炼核心概念,做成共享词表(文档 + 机器可读文件)</td><td>统一口径,AI 用对词,新人上手快</td></tr>
+      <tr><td><strong>② 检索层</strong></td><td>用 SPARQL 从知识图谱取<strong>事实三元组</strong>,喂给 AI 做 grounding</td><td>AI 问答<strong>有依据、更一致</strong>——核心价值</td></tr>
+      <tr><td><strong>③ 约束层</strong></td><td>用本体公理校验注入事实与输出的一致性</td><td>少静默错误,可审计</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>一个可衡量的试点</h2>
+  <p>拿一条真实问答走一遍:<strong>"这个 SKU 为什么排不下来?"</strong></p>
+  <ol>
+    <li><strong>映射</strong>:"这个 SKU"→ 本体里的 <code>:sku-447</code>。</li>
+    <li><strong>查询</strong>:沿语义层跳——<code>:sku-447 :hasLeadTime ?lt</code>、<code>:sku-447 :isProducedOn :line-7</code>、<code>:line-7 :hasCapacity ?cap</code>(<code>:CapacityAllocation</code>)。</li>
+    <li><strong>推理</strong>:推理器补全(资源类型、产能分配)。</li>
+    <li><strong>生成 + 校验</strong>:AI 基于这些事实给出"受产能/提前期限制"的有据结论,并用公理校验无矛盾。</li>
+  </ol>
+
+  <div class="keypoint">
+    <span class="tag">没有指标,就没落地</span>
+    <p>给这个试点定<strong>可衡量</strong>的三件事:<strong>① AI 回答准确率</strong>(有依据 vs 瞎猜)<strong>② 口径一致率</strong>(同一问题几次答案是否一致)<strong>③ 新成员上手时间</strong>(靠语义图是否更快)。试点跑出改善,再谈扩大。</p>
+  </div>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>团队采用:四个别忽略</h2>
+  <ul>
+    <li><strong>别用"本体"这个词</strong>——说"让 AI 更靠谱、跨系统别打架"。术语是给专家看的,结果是给团队看的。</li>
+    <li><strong>找 1–2 位拥护者</strong>先做出来给团队看,而不是逐级宣讲。</li>
+    <li><strong>做开发友好</strong>——本体/查询要让提示词、代码、文档都能直接用,别只留在研究员手里。</li>
+    <li><strong>让 agent 帮你维护</strong>——本体与查询由 agent 起草,你只负责"概念与判断"(正合你对语法的判断),把维护门槛降到团队敢用。</li>
+  </ul>
+
+  <!-- ================= 6 ================= -->
+  <h2><span class="num">06</span>别踩的坑</h2>
+  <ol>
+    <li>一上来就建<strong>超大本体</strong> —— 先做一个小试点。</li>
+    <li><strong>没有指标</strong>就宣称"有效" — 先定 3 个可衡量的点。</li>
+    <li>只给<strong>研究员</strong>看,不给开发/产品用。</li>
+    <li>跳过<strong>拥护者</strong>,直接推全团队。</li>
+  </ol>
+
+  <!-- ================= 7 ================= -->
+  <h2><span class="num">07</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">多模块跨系统引入本体,最核心的价值是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,让各模块/系统共用一套语义。">统一语义口径</button>
+      <button class="opt" data-fb="不对,本体不是为了扩容。">提升存储容量</button>
+      <button class="opt" data-fb="不对,本体不是为了提速网络。">加快网络速度</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">在多模块跨系统环境里,本体最适合扮演什么角色?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,本体是各模块/系统共享的语义层。">各模块的语义层</button>
+      <button class="opt" data-fb="不对,数据库是各模块的存储,不是本体。">各模块的数据库</button>
+      <button class="opt" data-fb="不对,本体不是缓存层。">各模块的缓存层</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">团队落地最容易翻车的是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,一口气建大本体最容易半途而废。">一上来建大本体</button>
+      <button class="opt" data-fb="不对,先定小试点是稳妥开局。">先定一个小试点</button>
+      <button class="opt" data-fb="不对,先找拥护者支持是对的。">先找拥护者支持</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://aclanthology.org/2025.emnlp-main.1674.pdf" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 落地证据</span>
+    <span class="ps-title">OG-RAG: Ontology-grounded RAG(2025)</span>
+    <span class="ps-url">aclanthology.org</span>
+    <span class="ps-why">看它如何用本体接地、降低幻觉、提升一致性——就是"AI 问答有依据"的硬证据。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">落地方法论与社区智慧,见 <a href="../reference/glossary.html">术语表</a>、<a href="0005-from-domain-to-ontology.html">从领域到本体</a>、<a href="0007-ontology-driven-rag.html">本体驱动的 RAG</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] OG-RAG: Ontology-grounded Retrieval-Augmented Generation(2025;收录于 EMNLP 自然语言处理实证方法会议)。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课是"落地打法"。想真正推进,就把你<strong>那个上下文的一条真实问答</strong>发我:我们一起走过"映射→查询→推理→生成+校验",并帮你定<strong>三个可衡量的指标</strong>——然后我陪你把它做成 0005 那样的本体骨架,接进你的 AI 问答。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0008-when-not-to-use-ontology.html">← 上一课:何时不用本体</a>
+    <a class="next" href="../reference/glossary.html">参考:术语表 / 三元组速查</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

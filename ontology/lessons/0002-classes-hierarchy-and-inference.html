@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0002 · 类、层次与推理 —— 本体为什么真的有用</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 02 · 类与推理</p>
+  <h1 class="title">类、层次与推理</h1>
+  <p class="subtitle">本体真正的力量,在于能从<strong>你没写的</strong>三元组里推出事实</p>
+
+  <p class="lede">上一课你看到三元组在"断言事实"。但真正的杠杆是:<strong>一旦有了类与约束,一个推理器(reasoner)能自动生成你没写、但逻辑上必然成立的三元组</strong>。这是关系数据库基本不做的事,也是本体在知识图与检索增强生成(Retrieval-Augmented Generation, 简称 RAG)里值钱的根源。<a class="cite" href="#ref1">[1]</a></p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>子类不是"子表",是一个逻辑陈述</h2>
+  <p>在关系模型里,"子类型"常被实现为一张子表或一个判别字段。但在本体里,<code>子类</code>是<strong>一条逻辑规则</strong>:</p>
+
+  <div class="keypoint">
+    <span class="tag">子类语义</span>
+    <p>若 <code>A ⊑ B</code>(A 是 B 的子类),那么<strong>A 的每个个体都自动是 B 的个体</strong>。这个"自动"是<em>逻辑</em>保证的,不是应用代码写的。</p>
+  </div>
+
+  <div class="triple"><span class="c"># ① 你断言的</span>
+<span class="kw">:FinishedGood</span> <span class="p">rdfs:subClassOf</span> <span class="o">:Product</span> .   <span class="c"># 成品 ⊑ 产品</span>
+<span class="kw">:sku-447</span> <span class="p">rdf:type</span> <span class="o">:FinishedGood</span> .   <span class="c"># 447 是成品</span>
+
+<span class="c-grp"># ② 推理器据此补齐</span>
+<span class="kw">:sku-447</span> <span class="p">rdf:type</span> <span class="o">:Product</span> .   <span class="c"># 它同时也是产品(你没写)</span></div>
+
+  <h3>传递性:一次推导,链条生效</h3>
+  <p>子类关系是<strong>可传递</strong>的:如果 <code>SKU ⊑ FinishedGood</code>(SKU 即库存单元 Stock Keeping Unit)且 <code>FinishedGood ⊑ Product</code>,那么 <code>SKU ⊑ Product</code>。你只需声明"紧邻"的一条,推理器帮你补全整条链。</p>
+  <p>在供应链计划里这很常见:</p>
+
+  <div class="triple"><span class="kw">:BrandedGood</span> <span class="p">rdfs:subClassOf</span> <span class="o">:FinishedGood</span> .
+<span class="kw">:FinishedGood</span> <span class="p">rdfs:subClassOf</span> <span class="o">:Product</span> .
+<span class="kw">:Product</span> <span class="p">rdfs:subClassOf</span> <span class="o">:SupplyChainObject</span> .
+<span class="c-grp"># 推理出:BrandedGood ⊑ SupplyChainObject</span></div>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>domain 与 range:给属性写"类型签名"</h2>
+  <p>别被"定义域/值域"唬住——它就是给属性标一个<strong>类型签名</strong>,像函数的参数类型:<code>hasCapacity(主语: 资源, 宾语: 产能度量)</code>。声明之后,推理器就能<strong>反过来补类型</strong>。</p>
+
+  <div class="callout">
+    <span class="tag">先用一个熟悉的例子</span>
+    <p>属性 <code>hasDriver</code>(有个司机)。问两句:<strong>谁能"有司机"?</strong>→ 车,所以它的 <strong>domain</strong>=车(管<em>主语</em>那端);<strong>那个司机是什么?</strong>→ 人,所以它的 <strong>range</strong>=人(管<em>宾语/值</em>那端)。</p>
+    <p>于是我只说一句 <code>:X :hasDriver :alice</code>,推理器就推出 <code>:X rdf:type :Car</code> 和 <code>:alice rdf:type :Person</code>——<strong>你没写类型,它补上了</strong>。</p>
+  </div>
+
+  <table>
+    <thead><tr><th>约束</th><th>管哪端</th><th>说人话</th></tr></thead>
+    <tbody>
+      <tr><td><code>domain</code> 定义域</td><td>主语</td><td>"谁用这个属性,它就是哪一类"</td></tr>
+      <tr><td><code>range</code> 值域</td><td>宾语 / 值</td><td>"这个属性连到的对象或值,是哪一类"</td></tr>
+    </tbody>
+  </table>
+
+  <p>换成供应链:是<strong>谁</strong>在"声明产能"?→ 资源(产线、机台、仓库),所以 <code>hasCapacity</code> 的 <strong>domain</strong>=资源;<strong>产能值</strong>是什么?→ 一个度量,所以 <strong>range</strong>=产能度量。看推理:</p>
+
+  <div class="triple"><span class="c"># ① 属性约束</span>
+<span class="kw">:hasCapacity</span> <span class="p">rdfs:domain</span> <span class="o">:Resource</span> .
+<span class="kw">:hasCapacity</span> <span class="p">rdfs:range</span> <span class="o">:CapacityMeasure</span> .
+
+<span class="c"># ② 一个具体事实</span>
+<span class="kw">:line-7</span> <span class="p">:hasCapacity</span> <span class="o">1200</span> .
+
+<span class="c-grp"># ③ 推理器据此推出</span>
+<span class="kw">:line-7</span> <span class="p">rdf:type</span> <span class="o">:Resource</span> .   <span class="c"># 因为用到了 hasCapacity</span></div>
+  <p class="note-caption">这就是 Web 本体语言(Web Ontology Language, 简称 OWL)里前缀 <code>rdfs:</code> 的资源:<code>subClassOf</code> / <code>domain</code> / <code>range</code> 都是资源描述框架模式(Resource Description Framework Schema, 简称 RDFS)的标准谓词。</p>
+
+  <div class="sidenote"><strong>为什么有用:</strong>你只需为 <code>hasCapacity</code> 写一次这个"类型签名"。以后任何"有产能的东西"(产线、机台、仓库)都会被自动认成"资源",不用逐个写 <code>rdf:type :Resource</code>——把类型判断交给推理器,而不是写一堆 if/else。</div>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 220" width="100%" role="img" aria-label="domain 推理:line-7 hasCapacity 1200,加上 hasCapacity 的 domain 是 Resource,推出 line-7 是 Resource">
+      <defs>
+        <style>
+          .node { fill: var(--paper-elev); stroke: var(--ink); stroke-width: 1.4; }
+          .lit  { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+          .lbl  { font-family: var(--font-body); font-size: 14px; fill: var(--ink); }
+          .edge { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+          .et   { font-family: var(--font-mono); font-size: 11px; fill: var(--accent); }
+          .infer{ stroke: var(--good); stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+          .it   { font-family: var(--font-mono); font-size: 11px; fill: var(--good); }
+          .ok   { fill: #eef4ef; stroke: var(--good); stroke-width: 1.4; }
+        </style>
+      </defs>
+      <!-- asserted facts -->
+      <rect class="node" x="30" y="24" width="150" height="40" rx="8"/>
+      <text class="lbl" x="105" y="49" text-anchor="middle">line-7</text>
+      <rect class="lit"  x="250" y="24" width="120" height="40" rx="8"/>
+      <text class="lbl" x="310" y="49" text-anchor="middle">1200</text>
+      <line class="edge" x1="180" y1="44" x2="250" y2="44"/>
+      <text class="et" x="200" y="36">hasCapacity</text>
+      <!-- rule: domain Resource -->
+      <text class="it" x="30" y="110">规则:hasCapacity 的 domain 是 Resource</text>
+      <!-- inferred -->
+      <rect class="ok" x="30" y="150" width="220" height="46" rx="8"/>
+      <text class="lbl" x="140" y="179" text-anchor="middle">line-7 a Resource（推理）</text>
+      <line class="infer" x1="240" y1="110" x2="240" y2="150"/>
+      <text class="it" x="250" y="132">推出</text>
+      <!-- rule box -->
+      <text class="it" x="290" y="130">domain(Resource)</text>
+    </svg>
+    <p class="figcap">图 1 · 事实 + 属性约束 → 推理器补出类型。你只写了三行,第四行是它给的。</p>
+  </div>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>推理的可信度,取决于你声明的粒度</h2>
+  <p>你会立刻想到:这会不会推出错误结论?会,如果约束声明得太宽。所以推理不是"魔法",而是<strong>可放的承诺</strong>:</p>
+  <table>
+    <thead><tr><th>你声明</th><th>推理器承诺</th><th>供应链计划里</th></tr></thead>
+    <tbody>
+      <tr><td><code>A ⊑ B</code></td><td>A 的个体也是 B 的个体</td><td>成品 / 产品 / 供应对象</td></tr>
+      <tr><td><code>p domain C</code></td><td>用 p 的个体是 C</td><td>用了 hasCapacity 即资源</td></tr>
+      <tr><td><code>p range C</code></td><td>p 的取值是 C</td><td>提前期的取值是时长</td></tr>
+    </tbody>
+  </table>
+  <div class="sidenote">
+    <strong>工程直觉:</strong>这些约束很像你给对象加的类型断言,但用<strong>声明式语言</strong>表达、由<strong>推理器</strong>统一执行——所以后来想"收紧"规则,改声明就好,不必改代码。
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>对检索增强生成(RAG)的意义</h2>
+  <p>为什么推理对检索增强生成有价值?因为检索与回答都受益于<strong>补全</strong>:</p>
+  <ul>
+    <li><strong>归一化</strong>:两个系统一个写"成品"、一个写"产品",你只需声明 <code>FinishedGood ⊑ Product</code>,查询/检索就能把两者对齐。</li>
+    <li><strong>补缺</strong>:检索时大模型问"7 号线是不是个生产资源?"——本体推理已给出 <code>a :Resource</code>,不必靠大语言模型(Large Language Model, 简称 LLM)猜。</li>
+    <li><strong>约束输出</strong>:声明了 domain/range,知识图在注入提示词前就能做一致性检查。</li>
+  </ul>
+
+  <!-- ================= quiz ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">若 FinishedGood ⊑ Product,且 sku-447 是 FinishedGood,推理器会自动得出什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,结论是它同时也是 Product,不是改成别的类。">sku-447 是 Material</button>
+      <button class="opt" data-fb="接近但没说全:结论是「它同时也是 Product」。">sku-447 是 FinishedGood</button>
+      <button class="opt" data-correct="true" data-fb="对,子类语义保证它自动也是 Product,哪怕你没写。">sku-447 也是 Product</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">声明 :hasCapacity 的 domain 为 :Resource 后,`:line-7 :hasCapacity 1200` 会推出什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="range 管的是取值类型,不是主体的类型。">1200 是 Resource</button>
+      <button class="opt" data-correct="true" data-fb="对,domain 约束主体:用 hasCapacity 的对象即资源。">line-7 是 Resource</button>
+      <button class="opt" data-fb="不是推出值域,domain 推出的是主体类型。">hasCapacity 是 Resource</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">子类关系的哪条性质,让"只需声明紧邻,链条自动补全"?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不是交换,是链式传递的性质。">可交换性 Commutative</button>
+      <button class="opt" data-fb="不是对称,子类不反过来。">对称性 Symmetric</button>
+      <button class="opt" data-correct="true" data-fb="对,传递性:若 A⊑B 且 B⊑C 则 A⊑C。">传递性 Transitive</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://www.w3.org/TR/owl2-primer/" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 值得一读</span>
+    <span class="ps-title">万维网联盟(W3C):OWL 2 入门</span>
+    <span class="ps-url">w3.org/TR/owl2-primer</span>
+    <span class="ps-why">读到"Classes and Class Hierarchies"与"Properties"两节,你会看到 subClassOf、domain、range 的权威定义与例证。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">更工程化的深读:见<a href="https://dl.acm.org/doi/book/10.1145/3382097" target="_blank" rel="noopener">Semantic Web for the Working Ontologist</a>中的"subclass"与"property"相关章节。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] 万维网联盟(World Wide Web Consortium, 简称 W3C),<em>资源描述框架模式(RDF Schema, 简称 RDFS)1.1</em> —— subClassOf / domain / range 是 RDFS 标准谓词,提供最基础的推理语义。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课抓住一个核心:推理器能把你<strong>声明过的约束</strong>兑现成<strong>你没写的事实</strong>——前提是声明得对。想自己出一题、或测某种约束会不会推出你要的结果,直接问我。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0001-what-is-an-ontology.html">← 上一课:本体是什么</a>
+    <a class="next" href="../reference/glossary.html">下一课:属性与关系（0003）→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

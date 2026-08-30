@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0006 · 查询与推理(SPARQL)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 06 · 查询与推理</p>
+  <h1 class="title">查询与推理(SPARQL)</h1>
+  <p class="subtitle">你用"模式"去匹配一张图;并且,"没查到"不等于"为假"</p>
+
+  <p class="lede">本体的价值一半在"怎么用"——也就是<strong>查询</strong>。查询语言叫 <strong>SPARQL(SPARQL 协议与资源描述框架查询语言)</strong>,你可以把它想成"SQL,但查的是一张由三元组连成的图、而且能带上推理"。这一课用 0005 的供应链本体来查。</p>
+
+  <div class="sidenote"><strong>先说明:你要带走的是"概念",不是语法。</strong>查具体的 <code>SELECT/WHERE/OPTIONAL</code> 语法,完全可以交给 agent 代写。但你真正要记住的是三个<strong>语义洞察</strong>——①查询是"用三元组模式匹配图";②开放世界里"查不到 ≠ 为假";③推理能补全后再查。这是判断"查询对不对、结果可不可信"的功底,也是你设计本体、让 agent 写对查询的基础。</div>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>一句话:用"三元组模式"匹配图</h2>
+  <p>SQL 是"查表 → 匹配行"。SPARQL 是"给一个<strong>三元组模式</strong> → 在整张图里找匹配"。模式里用 <code>?</code> 开头的就是<strong>变量</strong>(待填充)。</p>
+
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?order ?sku</span>
+<span class="kw">WHERE</span> <span class="o">{ ?order :requiresProduct ?sku . }</span></div>
+  <p class="note-caption">这句话的意思:"找出所有 <code>?order</code>,它通过 <code>:requiresProduct</code> 连到某个 <code>?sku</code>。" —— 就一个三元组模式。</p>
+
+  <div class="sidenote"><strong>和 SQL 的区别一句话:</strong>SQL 里你<strong>选择列</strong>;SPARQL 里你<strong>描述"关系的样子"</strong>,变量像占位符,匹配上就返回。你不是先有表,而是先有"图"。</div>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>连接 = 多个模式共享变量</h2>
+  <p>想跨过多个三元组?"<strong>共享同一个变量</strong>"就把它们串起来了,就像 SQL 的 JOIN。下面找出"每个订单所需的物料、以及该物料的提前期":</p>
+
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?order ?sku ?lt</span>
+<span class="kw">WHERE</span> <span class="o">{
+  ?order :requiresProduct ?sku .
+  ?sku   :hasLeadTime     ?lt .
+}</span></div>
+  <p class="note-caption">两个三元组都用了 <code>?sku</code> —— 于是把"订单→物料"和"物料→提前期"这两段<strong>接起来</strong>了。</p>
+
+  <p>再加个条件,用 <code>FILTER</code>:</p>
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?sku ?lt</span>
+<span class="kw">WHERE</span> <span class="o">{
+  ?sku :hasLeadTime ?lt .
+  FILTER (?lt &gt; 14)
+}</span></div>
+  <p class="note-caption">"提前期大于 14 天的物料"。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>关键:开放世界下,"查不到" ≠ "为假"</h2>
+  <p>这是你最容易踩的一处,也最要紧。本体是<strong>开放世界</strong>——某物料<strong>没写</strong>提前期,不代表"提前期是 0"或"不存在",而是<strong>尚未被人断言(未知)</strong>。</p>
+
+  <table>
+    <thead><tr><th>同一句"某 SKU 没写提前期"</th><th>关系数据库(闭世界)</th><th>本体(开放世界)</th></tr></thead>
+    <tbody>
+      <tr><td>含义</td><td>没有 / 视为零缺失</td><td><strong>只是未断言,可能未知</strong></td></tr>
+      <tr><td>查询结果</td><td>查不到=当作没有</td><td><strong>查不到=还不确定</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p>所以,若你在意"就算没提前期也想列出这个订单",用 <code>OPTIONAL</code>——它让那段<strong>可缺省</strong>,缺了也不丢结果:</p>
+
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?order ?sku ?lt</span>
+<span class="kw">WHERE</span> <span class="o">{
+  ?order :requiresProduct ?sku .
+  OPTIONAL { ?sku :hasLeadTime ?lt . }
+}</span></div>
+  <p class="note-caption">订单仍然都返回;有提前期的 <code>?lt</code> 有值,没有的就是空白(未知)。—— 这正是开放世界的表达。</p>
+
+  <div class="keypoint">
+    <span class="tag">和 SQL 的天壤之别</span>
+    <p>SQL 的 <code>LEFT JOIN</code> 里,"右边没行"常被当成"没有";而本体的 <code>OPTIONAL</code> 里,<code>?lt</code> 为空是"<strong>尚未声明</strong>"——它可能被推理器<strong>补出来</strong>。所以本体的查询天然更"宽容未知"。</p>
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>让推理也参与查询</h2>
+  <p>前几课的推理器能<strong>补三元组</strong>(如"7 号线是资源")。选对<strong>推理级别</strong>后,查询也能<strong>看到这些被推出来的三元组</strong>——哪怕它们没被显式写入。</p>
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?r</span>
+<span class="kw">WHERE</span> <span class="o">{ ?r rdf:type :Resource . }</span>
+<span class="c"># 开启推理后,连"只写了 hasCapacity、没写 rdf:type"的资源也能被查出</span></div>
+  <p class="note-caption">这就是"<strong>推理增强查询</strong>":先把隐式的补全,再匹配。这是本体比纯图查询更强的点。</p>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">SPARQL 查询的本质是什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对——用「三元组模式」在整张图里找匹配。">匹配三元组模式</button>
+      <button class="opt" data-fb="不对,SPARQL 不是查二维关系表。">查询二维关系表</button>
+      <button class="opt" data-fb="不对,SPARQL 不是实例化对象。">实例化类成对象</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">开放世界下,某 SKU "没写提前期",查询到它时意味着什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,不是零值,是未断言。">提前期即为零值</button>
+      <button class="opt" data-fb="不对,是未知/未断言,不是不存在。">库存单元不存在</button>
+      <button class="opt" data-correct="true" data-fb="对,缺失=尚未断言,可能未知,也可能被推理补出。">提前期未被断言</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">想查到推理器推出的(未被显式写的)三元组,关键在?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,开启推理查询才能看到补齐的事实。">必须显式写入</button>
+      <button class="opt" data-correct="true" data-fb="对,开启推理,查询就能看到推理出的三元组。">开启推理查询</button>
+      <button class="opt" data-fb="不对,推理出的结果查询里也能看到。">只能人工补齐</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://www.oreilly.com/library/view/learning-sparql-2nd/9781449371449/" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 温和上手</span>
+    <span class="ps-title">《Learning SPARQL》—— Bob DuCharme</span>
+    <span class="ps-url">oreilly.com / learningsparql.com</span>
+    <span class="ps-why">这本书从"马上写简单查询"带你入门,是最不吓人的 SPARQL 读物。想动手可配合 <a href="../reference/triples.html">三元组速查</a>。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">权威语法见 <a href="https://www.w3.org/TR/rdf11-primer/" target="_blank" rel="noopener">资源描述框架(RDF)1.1 入门</a> 及 <a href="https://www.w3.org/TR/sparql11-query/" target="_blank" rel="noopener">SPARQL 1.1 查询规范</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] DuCharme, B. <em>Learning SPARQL</em>(第 2 版) —— 最温和的 SPARQL 入门。</p>
+    <p id="ref2">[2] 万维网联盟(World Wide Web Consortium, W3C),<em>SPARQL 1.1 查询语言</em> —— 权威语法。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课记一句:SPARQL 是<strong>用三元组模式匹配图</strong>,而且本体的"查不到"是<strong>未知</strong>、不是"没有"。想针对你 0005 建的本体<strong>试一条具体查询</strong>,把问题发我,我帮你写成 SPARQL。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0005-from-domain-to-ontology.html">← 上一课:从领域到本体</a>
+    <a class="next" href="../reference/glossary.html">下一课:本体驱动的 RAG(0007)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

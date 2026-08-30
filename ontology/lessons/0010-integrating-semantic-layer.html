@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0010 · 打通语义层与业务系统</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 10 · 打通与落地</p>
+  <h1 class="title">打通语义层与业务系统</h1>
+  <p class="subtitle">让本体真正落到关系库 + 领域模型(DDD)之上,给业务带来<strong>可见收益</strong></p>
+
+  <p class="lede">上一课讲怎么带团队。这一课讲<strong>技术怎么打通</strong>:让本体(语义层)真正<strong>坐在你的关系库和领域模型之上</strong>,而不是停留在 PPT 或代码注释里。而且——<strong>这不是空想,行业有成熟的标准和产品在做</strong>。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>一个心智模型:四层各司其职</h2>
+  <p>别把本体当成"另一个数据库"。把它想成<strong>一层"语义视图"</strong>,叠在你的系统之上:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 520 220" width="100%" role="img" aria-label="分层:AI应用→语义层(本体/知识图谱)→记录层(关系库+DDD行为)">
+      <defs><style>
+        .l{fill:var(--paper-elev);stroke:var(--rule);stroke-width:1.4;}
+        .l2{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.6;}
+        .lb{font-family:var(--font-body);font-size:14px;fill:var(--ink);text-anchor:middle;}
+        .sub{font-family:var(--font-mono);font-size:10px;fill:var(--muted);text-anchor:middle;}
+        .ar{stroke:var(--accent);stroke-width:1.6;}
+      </style></defs>
+      <rect class="l" x="60" y="20" width="400" height="52" rx="10"/>
+      <text class="lb" x="260" y="44">AI 应用(大语言模型)</text><text class="sub" x="260" y="62">用 SPARQL / 三元组取事实</text>
+      <rect class="l2" x="60" y="100" width="400" height="54" rx="10"/>
+      <text class="lb" x="260" y="124">本体 · 语义层(知识图谱)</text><text class="sub" x="260" y="142">共享概念,开放世界,可推理</text>
+      <rect class="l" x="60" y="182" width="400" height="52" rx="10"/>
+      <text class="lb" x="260" y="206">记录层:关系库(系统记录)+ 领域驱动设计聚合(行为)</text><text class="sub" x="260" y="224">权威数据、事务、闭世界</text>
+      <line class="ar" x1="260" y1="72" x2="260" y2="100"/>
+      <line class="ar" x1="260" y1="154" x2="260" y2="182"/>
+    </svg>
+    <p class="figcap">图 1 · 关系库仍是权威记录;本体作为上面的"语义层";AI 从语义层取数。三层不是替代,是叠加。</p>
+  </div>
+
+  <table>
+    <thead><tr><th>层</th><th>负责</th><th>世界</th></tr></thead>
+    <tbody>
+      <tr><td><strong>记录层</strong>(关系库 + DDD 聚合)</td><td>权威数据、事务、业务行为</td><td>闭世界</td></tr>
+      <tr><td><strong>语义层</strong>(本体 / 知识图谱)</td><td>共享语义、校验、推理</td><td>开放世界</td></tr>
+      <tr><td><strong>AI 层</strong>(大语言模型)</td><td>从语义层取事实来回答/报告</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>打通关系库 ↔ 本体:W3C 标准</h2>
+  <p>把数据库"翻译"成本体,有<strong>官方标准</strong>:</p>
+  <table>
+    <thead><tr><th>方式</th><th>怎么做</th><th>适何时</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Direct Mapping</strong></td><td>自动:表→类、行→个体(用主键做标识符)、列→属性</td><td>先快速得到"有 RDF 视图"</td></tr>
+      <tr><td><strong>R2RML</strong>(关系库到 RDF 的映射语言)</td><td>你写映射:把列/查询视图对齐到<strong>既定本体</strong>术语</td><td>要对齐行业本体(如 SCOR)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="triple"><span class="c"># 一个 R2RML 片段:把 product 表映射到本体类</span>
+<span class="kw">:ProductMapping</span> <span class="p">rr:logicalTable</span> <span class="o">[ rr:tableName "product" ]</span> ;
+  <span class="p">rr:subjectMap</span> <span class="o">[ rr:template "http://ex.org/product/{product_id}" ; rr:class :Product ]</span> ;
+  <span class="p">rr:predicateObjectMap</span> <span class="o">[ rr:predicate :hasLeadTime ; rr:objectMap [ rr:column "lead_time_days" ] ]</span> .</div>
+  <p class="note-caption">读作:每行 <code>product</code> → 一个 <code>:Product</code> 个体(用 <code>product_id</code> 做标识符),它的 <code>lead_time_days</code> 列映射成本体属性 <code>:hasLeadTime</code>。这就是"把数据库对准本体"。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>虚拟 还是 物化?</h2>
+  <p>本体语义层要"活在"哪?两条路:</p>
+  <table>
+    <thead><tr><th>方案</th><th>怎么做</th><th>优点</th><th>代价</th></tr></thead>
+    <tbody>
+      <tr><td><strong>虚拟(推荐)</strong></td><td>用本体数据访问(OBDA),如 <strong>Ontop</strong>:把关系库<strong>当虚拟知识图谱</strong>,SPARQL 自动转成 SQL</td><td>数据不搬家、永不过时、零冗余</td><td>性能取决于改写质量</td></tr>
+      <tr><td><strong>物化</strong></td><td>ETL 把三元组拷进图库</td><td>遍历/多跳/AI 检索快</td><td>冗余、需同步、新鲜度打折</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sidenote"><strong>选型一句话:</strong>要"实时、不搬家"→ 虚拟(Ontop);要"图遍历/检索性能"→ 物化。多数场景可先虚拟,必要时局部物化。</div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>和领域模型(DDD)打通:共享词 + 语义契约</h2>
+  <p>本体和 DDD 不是二选一——<strong>它们是同一领域不同层的两张视图</strong>。打通的法子是<strong>共享词汇 + 语义契约</strong>:</p>
+  <ul>
+    <li>本体定义<strong>跨上下文都要对齐的共享概念</strong>(Product、Forecast、Capacity……)。</li>
+    <li>各 DDD 有界上下文里的 <strong>*ubiquitous language*</strong> 与本体术语<strong>保持一致</strong>(而非各叫各的)。</li>
+    <li>本体是"<strong>契约层</strong>";DDD 聚合仍在代码里管<strong>行为、事务</strong>。</li>
+  </ul>
+  <div class="keypoint">
+    <span class="tag">一句话</span>
+    <p>本体让不同上下文<strong>说同一种话</strong>,DDD 让每个上下文<strong>把话说对、把事办对</strong>。两者是互补,不是竞争。</p>
+  </div>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>真实可见的收益</h2>
+  <table>
+    <thead><tr><th>收益</th><th>具体表现</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AI 有依据</strong></td><td>大语言模型从语义层取结构化事实,少幻觉、口径一致</td></tr>
+      <tr><td><strong>跨系统不再打架</strong></td><td>本体统一各模块/系统词汇,少集成 bug、少扯皮</td></tr>
+      <tr><td><strong>业务/分析直接取数</strong></td><td>在语义层表达问题(SPARQL),不必懂原始 SQL</td></tr>
+      <tr><td><strong>对齐行业标准</strong></td><td>供应链对齐 SCOR(SCORVoc),互操作、可持续</td></tr>
+      <tr><td><strong>治理与审计</strong></td><td>出处(provenance)+ 公理校验,留痕、可控</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ================= 6 ================= -->
+  <h2><span class="num">06</span>一个最小落地,走一遍</h2>
+  <p>拿一张真实链路:<code>product</code> / <code>order</code> 表 → 本体 → 回答"这个 SKU 为什么排不下来?"</p>
+  <ol>
+    <li><strong>映射</strong>:用 R2RML 把表映射到本体(<code>Product</code>、<code>Order</code>、<code>hasLeadTime</code>、<code>requiresProduct</code>)。</li>
+    <li><strong>虚拟化</strong>:Ontop 让语义层"坐在"关系库上,SPARQL 即查即得(SQL 改写)。</li>
+    <li><strong>查询 + 推理</strong>:沿本体多跳(<code>:order-1042 :requiresProduct ?sku</code>、<code>:sku-447 :isProducedOn :line-7</code>、<code>:line-7 :hasCapacity ?cap</code>),推理器补全。</li>
+    <li><strong>AI 回答</strong>:大语言模型基于这些<strong>结构化事实</strong>给出"受产能/提前期限制"的有据结论。</li>
+    <li><strong>校验</strong>:用公理检查答案与注入事实无矛盾。</li>
+  </ol>
+  <p><strong>你能拿到的"可见收益":</strong>一个以前靠"看文本瞎猜"的 AI 问答,变成了"基于确定事实推算"——准确率、一致性、可审计性都肉眼可见提升。</p>
+
+  <!-- ================= 7 ================= -->
+  <h2><span class="num">07</span>行业实践(有据可查)</h2>
+  <ul>
+    <li><strong>W3C</strong>:<a href="https://www.w3.org/TR/r2rml/" target="_blank" rel="noopener">R2RML</a> 与 <a href="https://www.w3.org/TR/rdb-direct-mapping/" target="_blank" rel="noopener">Direct Mapping</a> —— 关系库↔RDF 的官方标准。</li>
+    <li><strong>Ontop(OBDA)</strong>:<a href="https://ontop-vkg.org/guide/" target="_blank" rel="noopener">开源</a>,把关系库当虚拟知识图谱,SPARQL→SQL。</li>
+    <li><strong>Microsoft Fabric IQ(本体)</strong>:<a href="https://learn.microsoft.com/en-us/fabric/iq/ontology/overview" target="_blank" rel="noopener">业界产品</a>——定义实体类型/属性/关系,<strong>绑定真实数据</strong>,暴露给分析、AI 代理、应用。</li>
+    <li><strong>Gartner / Forrester</strong>:语义层/知识图谱正成为企业 AI 的<strong>核心上下文基础设施</strong>;<a href="https://www.gartner.com/en/documents/6601702" target="_blank" rel="noopener">语义方法驱动 GenAI 价值</a>。</li>
+    <li><strong>供应链</strong>:<a href="https://github.com/vocol/scor" target="_blank" rel="noopener">SCORVoc</a>,对齐行业标准。</li>
+  </ul>
+
+  <!-- ================= 8 ================= -->
+  <h2><span class="num">08</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">本体语义层最该"活"在哪里?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,语义层作为关系库之上的虚拟语义视图。">关系库之上虚拟层</button>
+      <button class="opt" data-fb="不对,本体不是关系库内的存储层。">关系库之内存储层</button>
+      <button class="opt" data-fb="不对,通常不是要替换关系库。">替换掉关系库本身</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">"数据留在库里、查询时把 SPARQL 改写成 SQL"的语义层是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,Ontop 这类 OBDA 就是虚拟知识图谱。">虚拟知识图谱</button>
+      <button class="opt" data-fb="不对,物化是把数据拷进图库。">物化图数据库</button>
+      <button class="opt" data-fb="不对,这是向量检索,不是本体语义层。">文本向量检索</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">本体和领域模型(DDD)"打通"的核心做法是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,共享词汇 + 把本体当语义契约层。">共享词汇语义契约</button>
+      <button class="opt" data-fb="不对,本体不取代 DDD 聚合的行为/事务。">本体取代聚合对象</button>
+      <button class="opt" data-fb="不对,不是回退到单一表结构。">回退到单一表结构</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://www.w3.org/TR/r2rml/" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 官方标准</span>
+    <span class="ps-title">W3C: R2RML —— 关系数据库到 RDF 的映射语言</span>
+    <span class="ps-url">w3.org/TR/r2rml</span>
+    <span class="ps-why">这是"把数据库对准本体"的权威标准。配 <a href="https://ontop-vkg.org/guide/" target="_blank" rel="noopener">Ontop</a> 就能让语义层虚拟地坐在关系库之上。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">想看一个"本体已在业务系统落地并连 AI"的产品实例,见 <a href="https://learn.microsoft.com/en-us/fabric/iq/ontology/overview" target="_blank" rel="noopener">Microsoft Fabric IQ Ontology</a>;想先薄薄起步,回看 <a href="0005-from-domain-to-ontology.html">从领域到本体</a> 与 <a href="0006-query-SPARQL.html">SPARQL</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] 万维网联盟(World Wide Web Consortium, W3C),<em>R2RML: 关系数据库到 RDF 的映射语言</em>。</p>
+    <p id="ref2">[2] Ontop,<em>Virtual Knowledge Graph / Ontology-Based Data Access</em>(开源)。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课是"落地技术课"。想真正开工,把你的<strong>数据库技术栈</strong>(PostgreSQL / SQL Server / Azure / 图库?)和<strong>几张核心表</strong>发我,我帮你写一份 <strong>R2RML 映射骨架</strong> + 一条 Ontop 式 SPARQL——直接能搬进项目。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0009-team-adoption-AI-QA.html">← 上一课:团队落地</a>
+    <a class="next" href="../reference/glossary.html">参考:术语表 / 三元组速查</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

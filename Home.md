@@ -28,3 +28,6 @@ Web领域技术内容为主，包括但不限于前端、后端、数据库、De
 
 ## 搭建本博客所用的技术
 [Just the docs](https://github.com/pmarsceill/just-the-docs)
+
+## 课程与教程
+- [Ontology 本体论课程（从概念到团队落地）](/ontology/)

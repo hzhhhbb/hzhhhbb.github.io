@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0008 · 何时不用本体</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 08 · 工程取舍</p>
+  <h1 class="title">何时不用本体</h1>
+  <p class="subtitle">本体很强大,但<strong>不是银弹</strong>——知道什么时候别用它,才叫真会</p>
+
+  <p class="lede">前面七课都在讲本体多好。这一课唱个反调:在<strong>有些场景</strong>,硬上本体是"杀鸡用牛刀",甚至更糟。能把"该用、不该用"分清,是你真正的工程成熟度——也正好回你使命里"知道什么时候用关系数据库更省事"这一条。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>先看本体的"成本"</h2>
+  <p>本体不是免费的。它为你换来<strong>语义、互操作、推理</strong>,同时也带来几笔账:</p>
+
+  <table>
+    <thead><tr><th>成本</th><th>具体</th><th>什么时候是负担</th></tr></thead>
+    <tbody>
+      <tr><td><strong>工具链</strong></td><td>要懂 Web 本体语言(OWL)/资源描述框架、推理器、图库</td><td>团队没这经验时,学习成本高</td></tr>
+      <tr><td><strong>性能</strong></td><td>SPARQL 查询与推理,在大数据量下比 SQL 慢</td><td>高吞吐、强事务的系统</td></tr>
+      <tr><td><strong>行为</strong></td><td>本体是<strong>声明式语义</strong>,先天<strong>不带方法/行为</strong></td><td>规则要在代码里原子化执行</td></tr>
+      <tr><td><strong>一致性</strong></td><td>开放世界、可单调追加,不适配要"强一致性"的场景</td><td>账务、事务型业务规则</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sidenote"><strong>一句话:</strong>本体的强项是"<strong>表达世界是什么、允许推理</strong>";弱项是"<strong>承载行为、高并发强事务</strong>"。</div>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>该用 vs 不该用</h2>
+  <table>
+    <thead><tr><th>✅ 该用本体</th><th>❌ 别用本体(用关系库/领域驱动设计更合适)</th></tr></thead>
+    <tbody>
+      <tr><td>需要<strong>跨系统共享语义</strong>、对齐行业标准</td><td>单应用内部,<strong>schema 稳定</strong>,无跨边界共享</td></tr>
+      <tr><td>需要<strong>机器推理</strong>、开放/不完备/会演进的知识</td><td>数据是<strong>闭世界、确定、静态</strong>,只需增删改查</td></tr>
+      <tr><td>要<strong>知识图谱</strong>支撑检索/多跳/给大语言模型接地</td><td>核心是<strong>行为与事务</strong>(聚合、业务规则原子执行)</td></tr>
+      <tr><td>需要<strong>互操作、一致性校验、灵活演化的语义</strong></td><td>高吞吐、强一致、重事务的业务流水</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="tag">判断口诀</span>
+    <p>本体的天职是<strong>"让不同系统对世界达成一致、并允许推理"</strong>。如果你的痛点不是"语义不齐",而是"<strong>跑得快、事务对、行为准</strong>",那多半该用关系库 + 领域驱动设计。</p>
+  </div>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>更务实的心态:不一定是二选一</h2>
+  <p>现实中,别把本体和关系库看成"你死我活"。更常见、也更聪明的做法是<strong>分层叠加、各司其职</strong>:</p>
+  <ul>
+    <li><strong>关系库</strong>:当<strong>系统记录(system of record)</strong>,管强事务、权威数据、增删改查。</li>
+    <li><strong>本体 / 知识图谱</strong>:做上面的<strong>语义层</strong>——跨系统互操作、统一词汇、推理、给大语言模型接地。</li>
+  </ul>
+  <div class="keypoint">
+    <span class="tag">这正是你使命的答案</span>
+    <p>供应链计划里,订单/产能的<strong>权威数据与事务</strong>放在关系库(或领域驱动设计的聚合);而上层用<strong>本体</strong>提供跨系统一致语义、知识图谱支撑检索、公理做推理与校验——供大语言模型应用(GPT)使用。两者配合,而不是二选一。</p>
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>给你的供应链项目快速自检</h2>
+  <p>拿你的场景,问这五句:</p>
+  <ol>
+    <li>多个系统/团队对同一概念叫法一致吗?(不一致 → 本体词汇层有用)</li>
+    <li>需要"没写也能推出"的知识吗?(要 → 推理有用)</li>
+    <li>知识是否开放、不完备、会演进?(是 → 开放世界有价值)</li>
+    <li>核心是"执行+事务"还是"语义+互操作"?(后者 → 本体;前者 → 别硬上)</li>
+    <li>要喂给大语言模型、需要可解释结构化事实吗?(要 → 本体/知识图谱是底座)</li>
+  </ol>
+  <p>前 3 句答"是"、且第 4 句偏"语义",那就在你项目里用本体;反之,先上关系库,别为"显得专业"而造本体。</p>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">下面哪种场景<strong>不适合</strong>硬上本体?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,跨系统共享语义恰是本体的强项。">跨系统需共享语义</button>
+      <button class="opt" data-fb="不对,知识开放且要推理正是本体擅长。">知识开放且要推理</button>
+      <button class="opt" data-correct="true" data-fb="对,单库稳定+强事务,关系库/DDD 更合适。">单库稳定且强事务</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">本体和关系库的务实关系是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,分层叠加:关系库管记录,本体管语义/推理/RAG。">分层叠加各司其职</button>
+      <button class="opt" data-fb="不对,通常不是要彻底替换。">只用本体彻底替换</button>
+      <button class="opt" data-fb="不对,语义层由本体补,不是放弃本体。">只用关系库最省事</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">本体的一个重要先天短板是?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,本体表达语义恰恰很清晰。">表达语义不够清晰</button>
+      <button class="opt" data-correct="true" data-fb="对,本体是声明式语义,先天不承载行为/方法。">无法承载行为规则</button>
+      <button class="opt" data-fb="不对,共享词汇正是本体强项。">共享词汇非常困难</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://journals.sagepub.com/doi/10.3233/AO-150158" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 权威对比</span>
+    <span class="ps-title">《Ontology and database schema: What's the difference?》(Applied Ontology)</span>
+    <span class="ps-url">journals.sagepub.com</span>
+    <span class="ps-why">这篇系统对比本体(重含义)与数据库模式(重数据)的差异,正好帮你判断"该用哪个、何时用哪个"。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">想再看"为什么/何时建本体",回看 <a href="https://protege.stanford.edu/publications/ontology_development/ontology101.pdf" target="_blank" rel="noopener">Ontology Development 101</a>;逻辑层面见 <a href="0001-what-is-an-ontology.html">本体是什么</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] 《Ontology and database schema: What's the difference?》—— 本体与数据库模式的系统性对比。</p>
+    <p id="ref2">[2] 万维网联盟(World Wide Web Consortium, W3C),<em>Web 本体语言(OWL)入门</em> —— 语义、推理与表达能力的权威来源。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课是"判断课"。拿你真实项目,告诉我"数据多稳、要不要推理、核心是语义还是事务、要不要喂大语言模型",我帮你判断<strong>该不该在这里用本体、以及用哪一层</strong>。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0007-ontology-driven-rag.html">← 上一课:本体驱动的 RAG</a>
+    <a class="next" href="../reference/glossary.html">参考:术语表 / 三元组速查</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

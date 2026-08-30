@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0004 · 用约束建模</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 04 · 约束建模</p>
+  <h1 class="title">用约束建模</h1>
+  <p class="subtitle">声明"看不见的规则",让推理器替你<strong>推导</strong>与<strong>校验</strong></p>
+
+  <p class="lede">前面你学会了声明类、属性、子类、domain/range。这一课再上一步:声明<strong>规则(公理, axiom)</strong>。规则不是在代码里写的 if/else,而是<strong>声明式</strong>地说给推理器听,由它统一执行。于是推理器能做两件关系数据库不擅长的事:<strong>推导</strong>与<strong>校验</strong>。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>先把"公理"说成人话</h2>
+  <p>公理 = 你<strong>声明</strong>的、不必<strong>手写</strong>的规则。像关系数据库里的 <code>CHECK</code> / <code>NOT NULL</code> 约束——但更进一步:它除了<strong>拦下不合规的数据</strong>,还能<strong>推导出没明说的事实</strong>。</p>
+
+  <div class="callout">
+    <span class="tag">一个类比</span>
+    <p>你去银行办事。柜员不是每个客户都现场再教一遍规则,而是<strong>把规则写死</strong>在系统里(如"余额不能为负""身份证必须有效")。规则声明一次,之后系统<strong>自动校验</strong>、并按这些规则<strong>处理</strong>。本体的公理就是"写死的规则",交给推理器执行。</p>
+  </div>
+
+  <p>问题是:这些规则怎么写?本体用几种<strong>标准公理</strong>,下面三样最常用。</p>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>三种常用公理</h2>
+
+  <table>
+    <thead><tr><th>公理</th><th>说人话</th><th>推理器用它做什么</th><th>供应链计划例</th></tr></thead>
+    <tbody>
+      <tr><td><strong>等价类</strong> <code>owl:equivalentClass</code></td><td>"这两个词说的是<strong>同一种东西</strong>"</td><td>把两边的<strong>个体合并/互换</strong></td><td>「在售」≡「可下单」(两系统同一概念)</td></tr>
+      <tr><td><strong>不相交</strong> <code>owl:disjointWith</code></td><td>"这两个类<strong>没有共同个体</strong>"</td><td><strong>发现矛盾</strong>:某个体同时属两者即报错</td><td>「成品」⊥「原材料」</td></tr>
+      <tr><td><strong>基数</strong> <code>min/max/exactlyCardinality</code></td><td>"某类对某属性<strong>至少/至多/恰好 N 个</strong>"</td><td><strong>推导+校验</strong>数量关系</td><td>每张订单至少 1 个物料;每个 SKU 至多 1 个当前提前期</td></tr>
+    </tbody>
+  </table>
+
+  <div class="triple"><span class="c"># ① 等价类:两系统叫法一致</span>
+<span class="kw">:OnSale</span> <span class="p">owl:equivalentClass</span> <span class="o">:Orderable</span> .
+
+<span class="c"># ② 不相交:成品不是原材料</span>
+<span class="kw">:FinishedGood</span> <span class="p">owl:disjointWith</span> <span class="o">:RawMaterial</span> .
+
+<span class="c"># ③ 基数:每张订单至少需要 1 个物料</span>
+<span class="kw">:Order</span> <span class="p">rdfs:subClassOf</span> <span class="o">[ a owl:Restriction ; owl:onProperty :requiresProduct ; owl:minCardinality "1"^^xsd:nonNegativeInteger ]</span> .</div>
+  <p class="note-caption">基数约束在 Web 本体语言(OWL)里写成"限制"<code>owl:Restriction</code>;上面意思是:<code>Order</code> 的子类 —— 每个订单对 <code>requiresProduct</code> 至少有 1 个取值。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>推理器的两件事:推导 与 校验</h2>
+  <p>把公理和事实一起喂给推理器,它做两件不同的事:</p>
+
+  <table>
+    <thead><tr><th>动作</th><th>什么意思</th><th>例子</th></tr></thead>
+    <tbody>
+      <tr><td><strong>推导</strong></td><td>从已有知识<strong>推出未明说</strong>的新知识</td><td>成品⊑产品 + sku 是成品 ⇒ sku 是产品</td></tr>
+      <tr><td><strong>校验</strong></td><td>发现<strong>矛盾</strong>,告诉你"不一致"</td><td>某个体既声明为成品、又声明为原材料 ⇒ 报矛盾</td></tr>
+    </tbody>
+  </table>
+
+  <div class="keypoint">
+    <span class="tag">和关系数据库的差别</span>
+    <p>关系库的 <code>CHECK</code> 只在<strong>写入时</strong>拦一次(闭世界);本体公理在<strong>开放世界</strong>下由推理器统一执行——既<strong>推导</strong>新事实,又<strong>校验</strong>矛盾,而且是<strong>声明式</strong>的:想改规则就改声明,不用动代码。<a class="cite" href="#ref1">[1]</a></p>
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>落回你的产能</h2>
+  <p>还记得 0003 说"产能若带属性,就再化成类"吗?把它接上公理,威力就出来了:</p>
+  <ul>
+    <li><strong>产能是约束</strong> → 建模成 <code>CapacityAllocation</code>(资源 × 时段 × 数量)。</li>
+    <li><strong>加一个基数公理</strong>:"一个资源、一个时段,<strong>至多一个</strong>产能分配"。</li>
+    <li>于是推理器能<strong>校验</strong>:若有人给 7 号线、6 月排了两份产能,它就报"冲突/超排"——<strong>不用你写一堆判断</strong>。</li>
+  </ul>
+
+  <div class="triple"><span class="c"># 一个资源、一个时段,至多一个产能分配</span>
+<span class="kw">:CapacityAllocation</span> <span class="p">rdfs:subClassOf</span> <span class="o">[ a owl:Restriction ; owl:onProperty :forResource ; owl:maxCardinality "1"^^xsd:nonNegativeInteger ; owl:onClass :TimeSlot ]</span> .</div>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">要声明「成品」和「原材料」没有共同的个体,用哪个公理?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不对,等价类声明说两者是同一种东西。">等价声明</button>
+      <button class="opt" data-fb="不对,基数约束管的是数量,不是互斥。">基数约束</button>
+      <button class="opt" data-correct="true" data-fb="对,不相交(disjointWith)声明两类无共同个体,推理器可据此发现矛盾。">互斥声明</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">「每张订单至少需要 1 个物料」是什么约束?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不是,这是数量上的下限,不是互斥。">互斥声明</button>
+      <button class="opt" data-fb="不是,这是在声明数量规则,非等价。">等价声明</button>
+      <button class="opt" data-correct="true" data-fb="对,这是基数约束的最小值 minCardinality。">基数约束</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">用公理后,推理器能做哪两件事?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="错的,不是存储或索引,是语义推导与矛盾发现。">存储与索引</button>
+      <button class="opt" data-fb="不是加密签名,是语义层面的工作。">加密与签名</button>
+      <button class="opt" data-correct="true" data-fb="对,推导新事实,同时校验矛盾。">推导与校验</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://www.w3.org/TR/owl2-primer/" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 值得一读</span>
+    <span class="ps-title">万维网联盟(W3C):Web 本体语言(OWL)入门</span>
+    <span class="ps-url">w3.org/TR/owl2-primer</span>
+    <span class="ps-why">读"等价与不相交"、"属性限制(基数/存在/全称)"几节,你会看到本课三种公理的权威定义与例证。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">想更工程化地理解"声明式规则 vs 手写判断",见 <a href="https://dl.acm.org/doi/book/10.1145/3382097" target="_blank" rel="noopener">Semantic Web for the Working Ontologist</a> 的约束相关章节。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] 万维网联盟(World Wide Web Consortium, W3C),<em>Web 本体语言(OWL)入门</em> —— 等价类 / 不相交 / 基数限制 / 推理语义。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课记住一句:公理是<strong>声明式规则</strong>,让推理器替你<strong>推导</strong>和<strong>校验</strong>,而不是你写代码判断。想把你真实业务的某条约束(比如"一个物料只能有一个主供应商")写成公理,直接问我,我帮你建模。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0003-properties-and-relations.html">← 上一课:属性与关系</a>
+    <a class="next" href="../reference/glossary.html">下一课:从领域到本体(0005)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0003 · 属性与关系</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 03 · 属性与关系</p>
+  <h1 class="title">属性与关系</h1>
+  <p class="subtitle">本体里大部分真实知识,都活在<strong>关系</strong>里,而不在类层级里</p>
+
+  <p class="lede">上一课你看到 <code>子类</code> 与 <code>domain/range</code> 如何让推理器补类型。这一课把"关系"本身讲透:它有<strong>两种形态</strong>,有些属性自带<strong>"性格开关"</strong>能解锁更狠的推理,还有一个你一定会踩的建模坑——<strong>该做成类,还是做成属性?</strong></p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>两种属性:连到"个体"还是连到"值"</h2>
+  <p>本体里的 <strong>property</strong> 分两类,区别只在它指向什么:</p>
+
+  <table>
+    <thead><tr><th>类型</th><th>连接</th><th>Turtle 里</th><th>供应链计划例</th></tr></thead>
+    <tbody>
+      <tr><td><strong>对象属性</strong> <code>owl:ObjectProperty</code></td><td>个体 ↔ 个体</td><td><code>:order-1042 :requiresProduct :sku-447</code></td><td>订单需要物料、产线供给物料</td></tr>
+      <tr><td><strong>数据属性</strong> <code>owl:DatatypeProperty</code></td><td>个体 ↔ 字面量</td><td><code>:sku-447 :hasLeadTime "14"</code></td><td>提前期、优先级、数量</td></tr>
+    </tbody>
+  </table>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 190" width="100%" role="img" aria-label="对象属性连个体,数据属性连字面量">
+      <defs>
+        <style>
+          .node { fill: var(--paper-elev); stroke: var(--ink); stroke-width: 1.4; }
+          .lit  { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+          .lbl  { font-family: var(--font-body); font-size: 14px; fill: var(--ink); }
+          .objv { stroke: var(--accent); stroke-width: 1.7; fill: none; }
+          .datv { stroke: var(--good); stroke-width: 1.7; fill: none; }
+          .ot   { font-family: var(--font-mono); font-size: 11px; fill: var(--accent); }
+          .dt   { font-family: var(--font-mono); font-size: 11px; fill: var(--good); }
+        </style>
+      </defs>
+      <rect class="node" x="30" y="72" width="150" height="42" rx="8"/>
+      <text class="lbl" x="105" y="98" text-anchor="middle">sku-447</text>
+      <rect class="node" x="360" y="30" width="160" height="42" rx="8"/>
+      <text class="lbl" x="440" y="56" text-anchor="middle">us-plants（个体）</text>
+      <rect class="lit"  x="360" y="130" width="140" height="40" rx="20"/>
+      <text class="lbl" x="430" y="155" text-anchor="middle">"14"（字面量）</text>
+      <line class="objv" x1="180" y1="88" x2="360" y2="54"/>
+      <text class="ot" x="232" y="64">hasSupplier（对象）</text>
+      <line class="datv" x1="180" y1="98" x2="360" y2="146"/>
+      <text class="dt" x="228" y="126">hasLeadTime（数据）</text>
+    </svg>
+    <p class="figcap">图 1 · 同一个主体,一条边连到<strong>另一个个体</strong>(对象属性),一条边连到<strong>一个数值</strong>(数据属性)。</p>
+  </div>
+
+  <div class="sidenote">
+    <strong>关键点(工程师最容易忽略):</strong>这两类属性在 Turtle 语法里<strong>长得一模一样</strong>——都是 <code>主语 谓词 宾语</code>。区别完全取决于你<strong>声明它是对象属性还是数据属性</strong>。不声明,机器就分不清。
+  </div>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>属性的"性格开关"= 推理的密码</h2>
+  <p>除了 domain/range,属性还能带一些<strong>性格特征</strong>,一旦声明,推理器就能用它做更深的操作:</p>
+
+  <table>
+    <thead><tr><th>特征</th><th>意思</th><th>推理能做什么</th><th>供应链计划例</th></tr></thead>
+    <tbody>
+      <tr><td><code>subPropertyOf</code></td><td>属性是另一个属性的子集</td><td>A <code>supplies</code> B ⇒ A <code>provides</code> B</td><td>供给 ⊆ 提供</td></tr>
+      <tr><td><code>transitive</code></td><td>链式传递</td><td>a→b→c ⇒ a→c</td><td><code>partOf</code>:产线→工厂→公司</td></tr>
+      <tr><td><code>inverseOf</code></td><td>互为逆关系</td><td>a <code>requires</code> b ⇔ b <code>requiredBy</code> a</td><td>需求/被需求</td></tr>
+      <tr><td><code>FunctionalProperty</code></td><td>一个个体最多一个取值</td><td>发现"两个值"即不一致</td><td>某库存单元(SKU)只能有一个当前主提前期</td></tr>
+    </tbody>
+  </table>
+
+  <div class="triple"><span class="c"># 一个传递属性的实战:材料清单的 partOf 链</span>
+<span class="kw">:line-1</span> <span class="p">:partOf</span> <span class="o">:plant-a</span> .
+<span class="kw">:plant-a</span> <span class="p">:partOf</span> <span class="o">:company-x</span> .
+<span class="c-grp"># 推理器自动补出:line-1 :partOf :company-x</span></div>
+  <p class="note-caption">你只写了"紧邻"的两级,推理器补全了跨层归属——这就是传递属性。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>最常踩的坑:类,还是属性?</h2>
+  <p>建模时最纠结的是:<strong>这个东西该是一个类、一个属性,还是一个个体?</strong>给三条判断粗线,并用你真会遇到的例子说明:</p>
+
+  <table>
+    <thead><tr><th>你的直觉</th><th>通常对应</th><th>供应链计划例</th></tr></thead>
+    <tbody>
+      <tr><td>"这是一个<strong>实体</strong>,有自己的一堆属性,可独立存在"</td><td><strong>类</strong></td><td>Supplier、Product、Order、Resource</td></tr>
+      <tr><td>"这只是<strong>一个值</strong>,或一条简单连接"</td><td><strong>数据/对象属性</strong></td><td>hasLeadTime(值)、requiresProduct(连接)</td></tr>
+      <tr><td>"这条<strong>连接本身</strong>也带着属性(数量、日期、状态)"</td><td><strong>一个类(reification 再化)</strong></td><td>SupplyCommitment:供应商×物料×数量×日期</td></tr>
+    </tbody>
+  </table>
+
+  <div class="keypoint">
+    <span class="tag">判断口诀</span>
+    <p>如果"关系"你自己都能<strong>再挂上属性</strong>(数量、生效日期、状态),就别再做属性——把它<strong>提升为一个类</strong>。<a class="cite" href="#ref2">[2]</a></p>
+  </div>
+
+  <p>例:你说"产线 X 供给物料 Y"。若这只是个简单连接,做对象属性 <code>supplies</code>;但若它还带"从哪天生效、每天多少产能、是否刚被改过"——那你其实在描述一个<strong>独立的对象</strong>,该叫 <code>SupplyCommitment</code>(类),而不是一条属性。这跟领域驱动设计(Domain-Driven Design, 简称 DDD)里"把动作/关系再化成实体"是同一个直觉。</p>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>对检索增强生成(RAG)的意义</h2>
+  <ul>
+    <li><strong>对象属性</strong>让图<strong>能"跳"</strong>——多跳检索"哪条产线能供这个订单?",沿着 <code>requiresProduct</code> / <code>supplies</code> 走,而不只是关键词匹配。</li>
+    <li><strong>数据属性</strong>让你<strong>能筛能约束</strong>——"提前期 ≤ 14 天的 SKU",或约束注入的数值范围。</li>
+    <li>把"关系"正确地<strong>再化</strong>,大语言模型(Large Language Model, 简称 LLM)才能理解"供给"不是一个布尔,而是带数量/日期的承诺。</li>
+  </ul>
+
+  <!-- ================= quiz ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">下面哪个三元组用的是「对象属性」(连到另一个个体)?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对——requiresProduct 连接两个个体(订单与物料)。">order-1042 requiresProduct sku-447</button>
+      <button class="opt" data-fb="不是,值是字面量「14」,属数据属性。">sku-447 hasLeadTime 14</button>
+      <button class="opt" data-fb="不是,「高」是字面量,属数据属性。">order-1042 hasPriority "高"</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">若 :partOf 是传递属性,且 :line-1 :partOf :plant-a、:plant-a :partOf :company-x,推理器会得出?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="反了,是下级归属到上级,不是反过来。">company-x partOf line-1</button>
+      <button class="opt" data-fb="方向也对但没到最上,链没补完。">plant-a partOf line-1</button>
+      <button class="opt" data-correct="true" data-fb="对——传递链补出跨层归属。">line-1 partOf company-x</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">「供应商对某物料的供货」这个连接本身还带数量与日期,该建模成?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="不够——连接带属性时,该提升为类。">对象属性 supplies</button>
+      <button class="opt" data-fb="只存了个量,连接的其他属性丢失了。">数据属性 supplyQty</button>
+      <button class="opt" data-correct="true" data-fb="对——把带属性的关系再化成一个类(reification)。">类 SupplyCommitment</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://www.w3.org/TR/owl2-primer/" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 值得一读</span>
+    <span class="ps-title">万维网联盟(W3C):OWL 2 入门</span>
+    <span class="ps-url">w3.org/TR/owl2-primer</span>
+    <span class="ps-why">读"Properties"一节:对象/数据属性、domain/range、属性特征(特性、逆、传递、函数性)的权威定义。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">"到底该建类还是属性"这种建模判断,建议读 <a href="https://dl.acm.org/doi/book/10.1145/3382097" target="_blank" rel="noopener">Semantic Web for the Working Ontologist</a> 中关于建模抉择的章节。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] 万维网联盟(World Wide Web Consortium, 简称 W3C),<em>OWL 2 Web 本体语言(Web Ontology Language)入门</em> —— property / domain / range / 属性特征。</p>
+    <p id="ref2">[2] Allemang &amp; Hendler, <em>Semantic Web for the Working Ontologist</em> —— "该做类还是属性"的建模判断(reification)。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课抓住两个点:<strong>属性分对象/数据</strong>(语法一样,靠声明),以及<strong>带自己有属性的连接要做成类</strong>。拿你真实的供应链概念来问我"这个该做成类还是属性",我帮你判。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0002-classes-hierarchy-and-inference.html">← 上一课:类、层次与推理</a>
+    <a class="next" href="../reference/glossary.html">下一课:用约束建模(0004)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

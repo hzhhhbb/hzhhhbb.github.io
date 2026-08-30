@@ -1,0 +1,53 @@
+# mapping.r2rml —— 把"系统记录"对准"本体"(W3C 标准 R2RML)
+# 这是"打通数据库 ↔ 本体"的关键:每张表映射成本体类/属性。
+# 配合 Ontop(Ontop 改写 SPARQL→SQL)→ 语义层"虚拟"坐在关系库之上。
+# @prefix sc: <http://example.org/sc#> .
+# @prefix rr: <http://www.w3.org/ns/r2rml#> .
+
+# 例子:product 表 → sc:Product 个体,lead_time_days 列 → sc:hasLeadTime
+<#ProductMapping>
+  rr:logicalTable [ rr:tableName "product" ];
+  rr:subjectMap [
+    rr:template "http://example.org/sc#product-{product_id}";
+    rr:class sc:Product
+  ];
+  rr:predicateObjectMap [
+    rr:predicate sc:hasLeadTime;
+    rr:objectMap [ rr:column "lead_time_days" ]
+  ];
+  rr:predicateObjectMap [
+    rr:predicate rdf:type;
+    rr:objectMap [ rr:template "http://example.org/sc#{type}" ]  -- 成品/原材料映射
+  ].
+
+# purchase_order 表 → sc:Order;product_id → sc:requiresProduct
+<#OrderMapping>
+  rr:logicalTable [ rr:tableName "purchase_order" ];
+  rr:subjectMap [
+    rr:template "http://example.org/sc#order-{order_id}";
+    rr:class sc:Order
+  ];
+  rr:predicateObjectMap [
+    rr:predicate sc:requiresProduct;
+    rr:objectMap [ rr:template "http://example.org/sc#product-{product_id}" ]
+  ];
+  rr:predicateObjectMap [
+    rr:predicate sc:hasQuantity;
+    rr:objectMap [ rr:column "qty" ]
+  ].
+
+# capacity 表 → sc:CapacityAllocation(再化类);resource_id → sc:forResource
+<#CapacityMapping>
+  rr:logicalTable [ rr:tableName "capacity" ];
+  rr:subjectMap [
+    rr:template "http://example.org/sc#capacity-{resource_id}-{period}";
+    rr:class sc:CapacityAllocation
+  ];
+  rr:predicateObjectMap [
+    rr:predicate sc:forResource;
+    rr:objectMap [ rr:template "http://example.org/sc#resource-{resource_id}" ]
+  ];
+  rr:predicateObjectMap [
+    rr:predicate sc:hasCapacityValue;
+    rr:objectMap [ rr:column "qty" ]
+  ].

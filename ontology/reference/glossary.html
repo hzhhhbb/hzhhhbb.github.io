@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>术语表 · Ontology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  /* reference-specific tweaks */
+  .contextual { font-size: 0.95em; color: var(--ink-soft); max-width: var(--measure); }
+  .status { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: .12em; color: var(--muted); }
+  .gloss-term { padding-bottom: 1rem; border-bottom: 1px solid var(--rule); }
+</style>
+</head>
+<body>
+<main class="lesson">
+  <p class="kicker">Reference · 参考文档</p>
+  <h1 class="title">Ontology 术语表</h1>
+  <p class="subtitle">本工作区的<strong>统一母语</strong>。所有课程、练习、学习记录都遵循这里的规定表述。</p>
+  <p class="contextual">术语只在你能正确使用后才会出现在这里 —— 它是一份会随学习加深而更新的活文档。<span class="status">(当前:入门层)</span></p>
+  <hr class="rule">
+
+  <h2><span class="num">01</span>核心概念</h2>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">本体 (ontology)</span><span class="avoid">不要用:概念框架、领域图(太泛)</span></div>
+    <p>对某领域概念的一个<strong>显式的、正式化的共享规范</strong>——它描述"存在哪些类的东西、如何关联",而不描述"把数据存在哪"。</p>
+    <div class="gl-ex"><span class="glx">示例</span>一个为「需求计划、供应计划、产能」多个上下文共用的供应链本体,声明 <code>Product</code>、<code>Order</code>、<code>:hasLeadTime</code>、<code>:hasCapacity</code> 等概念与关系,让各系统与 LLM(RAG) 共用一套词。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">类 (class / concept)</span><span class="avoid">不要用:实体类型(混用)</span></div>
+    <p>一组拥有共同属性的对象的集合,例如 <code>Product</code>、<code>Order</code>。类是<strong>要被实例化</strong>的,不是表。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>Product</code>、<code>Order</code>、<code>Resource</code>、<code>Forecast</code> 都是类;<code>:sku-447 rdf:type :FinishedGood</code> 表示个体 447 隶属成品类。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">个体 (individual / instance)</span><span class="avoid">不要用:记录、行、条目</span></div>
+    <p>某类的一个具体例子,例如 <code>sku-447</code>。它是世界里真实或假设的那"一个东西",不是表中的一行。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:sku-447</code>(某 SKU)、<code>:order-1042</code>(某订单)、<code>:line-7</code>(某产线)都是个体;用 <code>rdf:type</code> 指向它们所属的类。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">属性 (property)</span><span class="avoid">不要用:列、字段、属性列</span></div>
+    <p>描述个体、或把个体与值/个体相连的<b>关系</b>,例如 <code>hasLeadTime</code>(提前期)、<code>requiresProduct</code>。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:hasLeadTime</code>(SKU→提前期天数)、<code>:requiresProduct</code>(订单→物料)、<code>:hasCapacity</code>(产线→产能值)、<code>:targetsProduct</code>(预测→物料)。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">三元组 (triple)</span></div>
+    <p>本体的最小语句:<code>主语 谓词 宾语</code>。每条三元组断言<strong>一条事实</strong>,可真、可假、可未知,也常可被推理得出。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:sku-447 :hasLeadTime "14"</code> —— 断言「SKU-447 的提前期是 14 天」;<code>:order-1042 :requiresProduct :sku-447</code> —— 「订单 1042 需要物料 447」。</div>
+  </div>
+
+  <h2><span class="num">02</span>关键范式</h2>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">开放世界假设 (open-world assumption)</span><span class="avoid">简称 OWA</span></div>
+    <p>我<strong>没说的</strong>不等于<strong>不成立</strong>。知识库只断言了它知道的部分,缺省不代表否定。</p>
+    <div class="gl-ex"><span class="glx">示例</span>知识库没说「7 号线是资源」≠ 它不是;推理器可从 <code>:line-7 :hasCapacity 1200</code> 加上 <code>hasCapacity</code> 的 domain 是 <code>Resource</code>,推出「7 号线是资源」。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">闭世界假设 (closed-world assumption)</span><span class="avoid">简称 CWA</span></div>
+    <p>数据库的默认:凡是<strong>没存的就是不存在</strong>。NOT NULL 缺值即非法、查不到就视为没有 —— 这正是关系数据库的默认逻辑。</p>
+    <div class="gl-ex"><span class="glx">示例</span>关系表里查不到某订单,就当作「没有该订单」;某 <code>NOT NULL</code> 列缺值,数据库直接拒绝插入。</div>
+  </div>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">子类 (subclass)</span><span class="avoid">不要用:派生表、子表</span></div>
+    <p>子类的每个个体天然也是父类的个体:<code>FinishedGood ⊑ Product</code>。这是本体用来做<strong>自动推理</strong>的机制之一。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:FinishedGood rdfs:subClassOf :Product</code> ⇒ 每个成品自动也是产品;可传递:<code>BrandedGood ⊑ FinishedGood ⊑ Product</code> ⇒ 品牌商品也是产品。</div>
+  </div>
+
+  <h2><span class="num">03</span>供应链计划示例词</h2>
+  <p class="contextual">贯穿全课的示例领域。这些词在本工作区是"领域术语",不是本体术语,但会用它们做例子。</p>
+
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">SKU / 物料</span></div>
+    <p>供应链里被计划的最小可管理单元(库存/产能的计量单位)。本工作区用 <code>Product</code> 或 <code>Material</code> 表示。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:sku-447</code> 代表某支牙膏的库存单位;<code>:sku-447 rdf:type :FinishedGood</code> 说明它是成品。<code>product_id / SKU</code> 在数据库里常作主键,在本体里是 IRI。</div>
+  </div>
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">提前期 (lead time)</span></div>
+    <p>从下采购/生产到可用的时长,是计划的一条关键属性,常作为 <code>hasLeadTime</code> 关系出现。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:sku-447 :hasLeadTime "14"^^xsd:integer</code> —— 物料 447 的(生产/采购)提前期是 14 天。注意:提前期既可能是数据属性(一个数值),也可能因带「供应商/运输方式」而再化为类(如 LeadTimeRule)。</div>
+  </div>
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">预测 (forecast)</span></div>
+    <p>对某物料在未来某时段的需求估计,通常指向某个 <code>Product</code> 与时间窗口。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:forecast-jun rdf:type :Forecast</code>、<code>:forecast-jun :targetsProduct :sku-447</code>、<code>:forecast-jun :forPeriod "2026-06"</code> —— 六月预测指向物料 447。预测常是计划的输入,天然带「时段」维度。</div>
+  </div>
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">产能 (capacity)</span></div>
+    <p>某资源(如产线、机台、车队、仓储、人力、供应商)在单位时间内的可用量/吞吐,是计划必须满足的<strong>约束</strong>。注意它<strong>比"生产能力"更宽</strong>。</p>
+    <p><strong>五类常见产能:</strong> 生产(←产线/机台)、运输/物流(←车队/月台)、仓储/库存(←仓库/货架)、人力(←班组/工时)、供应商/外协(←供方)。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:line-7 :hasCapacity 1200</code> —— 产线 7 每天可用 1200 单位。若产能还带「时段、是否可加班、变动成本」等属性,应再化为一个类,如 <code>CapacityAllocation</code>(资源 × 时段 × 数量 × 成本)。</div>
+  </div>
+  <div class="gloss-term">
+    <div class="gl-head"><span class="gl-name">计划 (plan)</span></div>
+    <p>对"要做什么、何时做、用多少资源"的一组决策,常被建模为 <code>Plan</code> 类及其与 <code>Order</code> / <code>Forecast</code> / <code>Resource</code> 的关系。</p>
+    <div class="gl-ex"><span class="glx">示例</span><code>:plan-072 rdf:type :Plan</code>、<code>:plan-072 :coversOrder :order-1042</code>、<code>:plan-072 :allocatesResource :line-7</code>、<code>:plan-072 :satisfies :forecast-jun</code> —— 某排产计划覆盖订单、占用产线、满足预测。</div>
+  </div>
+
+  <h2><span class="num">04</span>缩略语 Abbreviations</h2>
+  <p class="contextual">本工作区权威缩略语表。课程中每处首次出现均用「全称(缩写)」;此处收录全课用到的所有缩写。</p>
+  <table>
+    <thead><tr><th>缩写</th><th>全称(英文)</th><th>中文</th></tr></thead>
+    <tbody>
+      <tr><td>RDF</td><td>Resource Description Framework</td><td>资源描述框架</td></tr>
+      <tr><td>RDFS</td><td>RDF Schema</td><td>资源描述框架模式</td></tr>
+      <tr><td>OWL</td><td>Web Ontology Language</td><td>Web 本体语言</td></tr>
+      <tr><td>SPARQL</td><td>SPARQL Protocol and RDF Query Language</td><td>SPARQL 协议与 RDF 查询语言(递归式名字)</td></tr>
+      <tr><td>IRI</td><td>Internationalized Resource Identifier</td><td>国际化资源标识符</td></tr>
+      <tr><td>URI</td><td>Uniform Resource Identifier</td><td>统一资源标识符</td></tr>
+      <tr><td>TTL</td><td>Turtle</td><td>Turtle(RDF 文本语法,文件扩展名 .ttl)</td></tr>
+      <tr><td>xsd</td><td>XML Schema</td><td>XML 模式(`xsd:` 为其命名空间前缀)</td></tr>
+      <tr><td>LLM</td><td>Large Language Model</td><td>大语言模型</td></tr>
+      <tr><td>RAG</td><td>Retrieval-Augmented Generation</td><td>检索增强生成</td></tr>
+      <tr><td>KG</td><td>Knowledge Graph</td><td>知识图谱</td></tr>
+      <tr><td>AI</td><td>Artificial Intelligence</td><td>人工智能</td></tr>
+      <tr><td>OWA</td><td>Open-World Assumption</td><td>开放世界假设</td></tr>
+      <tr><td>CWA</td><td>Closed-World Assumption</td><td>闭世界假设</td></tr>
+      <tr><td>DDD</td><td>Domain-Driven Design</td><td>领域驱动设计</td></tr>
+      <tr><td>SQL</td><td>Structured Query Language</td><td>结构化查询语言</td></tr>
+      <tr><td>ORM</td><td>Object-Relational Mapping</td><td>对象关系映射</td></tr>
+      <tr><td>ER</td><td>Entity-Relationship</td><td>实体-关系</td></tr>
+      <tr><td>CRUD</td><td>Create, Read, Update, Delete</td><td>增、查、改、删</td></tr>
+      <tr><td>API</td><td>Application Programming Interface</td><td>应用程序编程接口</td></tr>
+      <tr><td>SC</td><td>Supply Chain</td><td>供应链</td></tr>
+      <tr><td>SKU</td><td>Stock Keeping Unit</td><td>最小库存单元/库存保持单位</td></tr>
+      <tr><td>ERP</td><td>Enterprise Resource Planning</td><td>企业资源计划</td></tr>
+      <tr><td>MES</td><td>Manufacturing Execution System</td><td>制造执行系统</td></tr>
+      <tr><td>S&amp;OP</td><td>Sales &amp; Operations Planning</td><td>销售与运营计划</td></tr>
+      <tr><td>SCOR</td><td>Supply Chain Operations Reference</td><td>供应链运作参考</td></tr>
+      <tr><td>SCORVoc</td><td>SCOR Vocabulary</td><td>SCOR 词汇集(SCOR 的本体词汇)</td></tr>
+      <tr><td>W3C</td><td>World Wide Web Consortium</td><td>万维网联盟</td></tr>
+      <tr><td>EMNLP</td><td>Conference on Empirical Methods in Natural Language Processing</td><td>自然语言处理实证方法会议</td></tr>
+      <tr><td>FAIR</td><td>Findable, Accessible, Interoperable, Reusable</td><td>可查找、可访问、可互操作、可复用</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="rule">
+  <div class="ask-agent">
+    <span class="tag">有疑问?</span>
+    <p>术语表会随你学习持续更新。遇到用词分歧,直接问 agent —— 我们按这份母语统一表达。</p>
+  </div>
+</main>
+</body>
+</html>

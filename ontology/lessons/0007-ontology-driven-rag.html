@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0007 · 本体驱动的 RAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 07 · 直击使命</p>
+  <h1 class="title">本体驱动的 RAG</h1>
+  <p class="subtitle">本体怎么治检索增强生成(RAG)的三痛,并把它接进大语言模型应用</p>
+
+  <p class="lede">这是全课最贴你使命的一节。前面的类、三元组、推理、SPARQL,到这里汇成一个答案:<strong>本体 + 知识图谱</strong>,正好治住大语言模型检索应用那三个老毛病——<strong>不懂领域词、检索到碎块、回答不一致</strong>。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>RAG 的三痛,本体各给一味药</h2>
+  <p>检索增强生成(Retrieval-Augmented Generation, 简称 RAG)靠"检索 + 生成"缓解幻觉,但有三个挥之不去的痛点:</p>
+
+  <table>
+    <thead><tr><th>痛点</th><th>具体表现</th><th>本体给什么</th></tr></thead>
+    <tbody>
+      <tr><td><strong>① 领域词不一致</strong></td><td>系统里叫 SKU、业务叫"物料"、ERP 叫"产品"</td><td><strong>统一词汇</strong>——本体的共享概念化</td></tr>
+      <tr><td><strong>② 检索到碎块</strong></td><td>只会抓孤立文本片段,抓不到"事实与关系"</td><td><strong>结构化知识图</strong>——沿关系取回事实</td></tr>
+      <tr><td><strong>③ 回答不一致</strong></td><td>同一个问题几次答案打架</td><td><strong>约束 + 推理</strong>——校验事实、补全隐含</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sidenote"><strong>一句话:</strong>本体把"你懂领域"这件事,从"靠大模型猜"变成"给大模型一套可依赖的语义底座"。</div>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>三条配合模式</h2>
+  <p>具体怎么配合?三条,从轻到重:</p>
+
+  <h3>模式一 · 词汇层:本体 = 统一词表</h3>
+  <p>把你的本体<strong>词汇</strong>注入提示词/上下文,让大语言模型用对词:<code>LeadTime</code>、<code>hasCapacity</code>、<code>FinishedGood ⊑ Product</code>。它不再"商品/备货期"乱叫。</p>
+
+  <h3>模式二 · 检索层:沿关系取回"事实"</h3>
+  <p>不做纯文本分块,而是<strong>用 SPARQL 沿本体关系跳</strong>,取回具体的<strong>事实三元组</strong>给大语言模型做 grounding。多跳、有因果关系,而非孤立片段。</p>
+
+  <div class="triple"><span class="kw">SELECT</span> <span class="o">?a ?b</span>
+<span class="kw">WHERE</span> <span class="o">{ ?a :requiresProduct ?sku . ?sku :isProducedOn ?b . }</span>
+<span class="c"># 沿「下单→产物→可生产资源」多跳,取回订单与产线的对应事实</span></div>
+
+  <h3>模式三 · 约束层:用公理约束/校验</h3>
+  <p>用本体的公理(dataset/domain-range/基数)对<strong>注入的事实</strong>和<strong>生成的输出</strong>做一致性与合法性校验——提前拦下矛盾、非法值,而不是让大模型硬编。</p>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>端到端,长什么样</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 640 130" width="100%" role="img" aria-label="本体驱动 RAG 流程:问题→映射/查询→图事实→与文本合并→生成→校验">
+      <defs><style>
+        .bx{fill:var(--paper-elev);stroke:var(--rule);stroke-width:1.4;rx:8;}
+        .hl{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5;}
+        .lb{font-family:var(--font-body);font-size:13px;fill:var(--ink);text-anchor:middle;}
+        .ar{stroke:var(--accent);stroke-width:1.6;marker-end:url(#ax);}
+      </style>
+      <marker id="ax" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--accent)"/></marker></defs>
+      <rect class="bx" x="10" y="44" width="96" height="46" rx="8"/><text class="lb" x="58" y="71">问题</text>
+      <rect class="bx" x="128" y="44" width="110" height="46" rx="8"/><text class="lb" x="183" y="71">映射+SPARQL</text>
+      <rect class="hl" x="260" y="44" width="110" height="46" rx="8"/><text class="lb" x="315" y="71">知识图谱</text>
+      <rect class="bx" x="392" y="44" width="110" height="46" rx="8"/><text class="lb" x="447" y="71">事实三元组</text>
+      <rect class="bx" x="524" y="44" width="106" height="46" rx="8"/><text class="lb" x="577" y="71">生成+校验</text>
+      <line class="ar" x1="106" y1="67" x2="126" y2="67"/>
+      <line class="ar" x1="238" y1="67" x2="258" y2="67"/>
+      <line class="ar" x1="370" y1="67" x2="390" y2="67"/>
+      <line class="ar" x1="502" y1="67" x2="522" y2="67"/>
+    </svg>
+    <p class="figcap">图 1 · 本体驱动检索增强生成:先经本体把问题变成<strong>结构化查询</strong>,取回<strong>事实</strong>,再和文本一起交给大语言模型,最后用本体校验。</p>
+  </div>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>一个供应链实例</h2>
+  <p>用户问:<strong>"7 号线这个月能满足订单 1042 吗?"</strong> 走一遍:</p>
+  <ol>
+    <li><strong>映射</strong>:把"7 号线""订单 1042"映射到本体的 <code>:line-7</code>、<code>:order-1042</code>。</li>
+    <li><strong>查询</strong>:沿本体跳——<code>:order-1042 :requiresProduct :sku-447</code>、<code>:sku-447 :isProducedOn :line-7</code>、<code>:line-7 :hasCapacity ?v</code>(<code>:CapacityAllocation</code>)。</li>
+    <li><strong>推理</strong>:推理器补齐(如产能分配、资源类型),得到<strong>可靠事实</strong>。</li>
+    <li><strong>生成</strong>:大语言模型基于这些事实三元组 + 少量文本,算出"产能 vs 需求",给出有依据的结论。</li>
+    <li><strong>校验</strong>:用公理检查答案与注入事实无矛盾。</li>
+  </ol>
+  <div class="keypoint">
+    <span class="tag">这就是差异</span>
+    <p>没有本体,大语言模型只能"看几段文本猜";有了本体,它能<strong>沿确定的关系拿到确定的事实、再推理</strong>——回答有据可查,也更一致。</p>
+  </div>
+  <p>近两年的研究(<a href="https://aclanthology.org/2025.emnlp-main.1674.pdf" target="_blank" rel="noopener">OG-RAG</a>、<a href="https://github.com/laiyagushi/ontorag" target="_blank" rel="noopener">OntoRAG</a>)正是这个思路:本体接地的检索增强生成,显著降低幻觉、提升领域一致性。</p>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>检查你的理解</h2>
+
+  <div class="quiz">
+    <p class="quiz-q">本体给 RAG 补的"词汇层",核心作用是什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="对,统一领域词汇,让大语言模型用对一套词。">统一领域词汇</button>
+      <button class="opt" data-fb="不对,本体不是为了提速检索。">提升检索速度</button>
+      <button class="opt" data-fb="不对,本体不是为了省存储。">压缩存储空间</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">知识图谱检索相比纯文本分块,强在哪?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,沿关系多跳取回事实,而非孤立片段。">沿关系取回事实</button>
+      <button class="opt" data-fb="不是随机,是按关系取事实。">随机抽取关键词</button>
+      <button class="opt" data-fb="不是,知识图检索是按关系而非单块文本。">单块文本最节省</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">用本体公理去约束/校验,作用是什么?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对,提前拦下矛盾/非法值,回答更一致。">约束输出并校验</button>
+      <button class="opt" data-fb="不对,约束主要不是提速生成。">提升生成的速度</button>
+      <button class="opt" data-fb="不对,约束不是为了省存储。">减少存储的开销</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://aclanthology.org/2025.emnlp-main.1674.pdf" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 权威证据</span>
+    <span class="ps-title">OG-RAG: Ontology-grounded Retrieval-Augmented Generation</span>
+    <span class="ps-url">aclanthology.org / EMNLP 2025</span>
+    <span class="ps-why">看它如何用本体接地检索增强生成,降低幻觉、提升领域一致性——这正是你使命的正解证据。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">想直接看实现,可参考开源框架 <a href="https://github.com/laiyagushi/ontorag" target="_blank" rel="noopener">OntoRAG</a>;想动手,回看 <a href="0005-from-domain-to-ontology.html">从领域到本体</a> 与 <a href="0006-query-SPARQL.html">SPARQL</a>。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] OG-RAG: Ontology-grounded Retrieval-Augmented Generation(2025;收录于 EMNLP 自然语言处理实证方法会议)。</p>
+    <p id="ref2">[2] OntoRAG: Ontology-Driven RAG(开源框架)。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课是你使命的正解。想把你的供应链计划接成"本体驱动的检索增强生成",可以直接和我聊聊<strong>从哪里切</strong>(词汇层/检索层/约束层)、<strong>先做哪一步</strong>。有任何概念卡壳,尽管问。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="0006-query-SPARQL.html">← 上一课:查询与推理</a>
+    <a class="next" href="../reference/glossary.html">下一课:何时不用本体(0008)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

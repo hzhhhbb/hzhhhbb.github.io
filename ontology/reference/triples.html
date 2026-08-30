@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>参考 · 三元组速查 (RDF/Turtle)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+<style>
+  .anatomy { display:flex; gap:10px; align-items:stretch; margin:1.4rem 0; flex-wrap:wrap; }
+  .part { flex:1; min-width:120px; padding:1rem; border:1px solid var(--rule); border-radius:6px; background:var(--paper-elev); }
+  .part .lbl { font-family:var(--font-mono); font-size:0.68rem; letter-spacing:.14em; text-transform:uppercase; }
+  .part.s { border-left-color:var(--ink); } .part.s .lbl{color:var(--ink);}
+  .part.p { border-left-color:var(--accent);} .part.p .lbl{color:var(--accent);}
+  .part.o { border-left-color:var(--good);}  .part.o .lbl{color:var(--good);}
+  .part .val { font-family:var(--font-mono); font-size:0.9rem; margin-top:.5rem; word-break:break-word; }
+  .part .note { font-size:0.8rem; color:var(--muted); margin-top:.5rem; }
+</style>
+</head>
+<body>
+<main class="lesson">
+  <p class="kicker">Reference · 速查</p>
+  <h1 class="title">三元组速查</h1>
+  <p class="subtitle">RDF 原子陈述 + Turtle 语法 —— 本工作区最重要的 `reference`</p>
+
+  <h2><span class="num">01</span>一条三元组的解剖</h2>
+  <div class="anatomy">
+    <div class="part s"><div class="lbl">主语 subject</div><div class="val">:sku-447</div><div class="note">一个资源 · 不能是字面量</div></div>
+    <div class="part p"><div class="lbl">谓词 predicate</div><div class="val">:hasLeadTime</div><div class="note">关系名 · 必须是 IRI</div></div>
+    <div class="part o"><div class="lbl">宾语 object</div><div class="val">"14"</div><div class="note">资源或字面量</div></div>
+  </div>
+  <p>主语-谓词-宾语 → 一张<strong>有向带标签图</strong>里的<strong>一条边</strong>。多个共享节点的三元组拼成一张图。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 180" width="100%" role="img" aria-label="三元组连成图:order-1042 需要 sku-447,sku-447 提前期 14,sku-447 有供应商 us-plants">
+      <defs><style>
+        .node{fill:var(--paper-elev);stroke:var(--ink);stroke-width:1.4;}
+        .lit{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.4;}
+        .lbl{font-family:var(--font-body);font-size:13px;fill:var(--ink);}
+        .edge{stroke:var(--accent);stroke-width:1.6;fill:none;}
+        .et{font-family:var(--font-mono);font-size:10px;fill:var(--accent);}
+      </style></defs>
+      <rect class="node" x="30" y="18" width="150" height="40" rx="8"/><text class="lbl" x="105" y="43">order-1042</text>
+      <rect class="node" x="300" y="18" width="140" height="40" rx="8"/><text class="lbl" x="370" y="43">sku-447</text>
+      <rect class="node" x="300" y="120" width="150" height="40" rx="8"/><text class="lbl" x="375" y="145">us-plants</text>
+      <rect class="lit" x="30" y="120" width="120" height="40" rx="20"/><text class="lbl" x="90" y="145">"14"</text>
+      <line class="edge" x1="180" y1="38" x2="300" y2="38"/><text class="et" x="200" y="30">requiresProduct</text>
+      <line class="edge" x1="300" y1="58" x2="300" y2="120"/><text class="et" x="308" y="92">hasSupplier</text>
+      <line class="edge" x1="30" y1="58" x2="60" y2="120"/><text class="et" x="40" y="92">hasLeadTime</text>
+    </svg>
+    <p class="figcap">图 · 三条三元组共享节点,拼成一张小图;每条边=一条三元组。</p>
+  </div>
+
+  <h2><span class="num">02</span>Turtle 语法速记</h2>
+  <div class="triple"><span class="c"># 前缀声明</span>
+<span class="kw">@prefix</span> : &lt;<span class="o">http://example.org/sc#</span>&gt; .
+
+<span class="c"># 基本三元组;句点( . )结束一条</span>
+<span class="kw">:sku-447</span> <span class="p">:hasLeadTime</span> <span class="o">"14"</span> .
+
+<span class="c"># 分号( ; )= 同一主语继续;逗号( , )= 同一谓词、多个宾语</span>
+<span class="kw">:order-1042</span> <span class="p">:requiresProduct</span> <span class="o">:sku-447</span> ;  <span class="p">:hasPriority</span> <span class="o">"high"</span> .
+<span class="kw">:sku-447</span> <span class="p">:hasSupplier</span> <span class="o">:us-plants</span> , <span class="o">:eu-plants</span> .
+
+<span class="c"># 字面量类型/语言</span>
+<span class="kw">:sku-447</span> <span class="p">:hasLeadTime</span> <span class="o">"14"^^xsd:integer</span> .
+<span class="kw">:sku-447</span> <span class="p">:label</span> <span class="o">"物料 447"@zh</span> .
+
+<span class="c"># 空白节点(匿名资源)</span>
+<span class="kw">:_order</span> <span class="p">:requiresProduct</span> <span class="o">:sku-447</span> .</div>
+
+  <h2><span class="num">03</span>角色约束(必记)</h2>
+  <table>
+    <thead><tr><th>角色</th><th>允许</th><th>禁止</th></tr></thead>
+    <tbody>
+      <tr><td>主语</td><td>IRI、空白节点</td><td>字面量</td></tr>
+      <tr><td>谓词</td><td><strong>IRI(必须是"名")</strong></td><td>字面量、空白节点</td></tr>
+      <tr><td>宾语</td><td>IRI、空白节点、字面量</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">04</span>语义与关键性质</h2>
+  <ul>
+    <li><strong>命题非论证</strong>:单条只是陈述;推理需多条 + 规则。</li>
+    <li><strong>开放世界</strong>:没断言 ≠ 为假;允许不完备。</li>
+    <li><strong>全局 IRI</strong>:任何资源可被跨数据集引用/链接(Linked Data)。</li>
+    <li><strong>单调</strong>:只追加,不推翻已有。</li>
+    <li><strong>无强制 schema</strong>:想说就说,不必先改表。</li>
+  </ul>
+
+  <h2><span class="num">05</span>三元组 vs 一行记录</h2>
+  <table>
+    <thead><tr><th></th><th>一行记录</th><th>一条三元组</th></tr></thead>
+    <tbody>
+      <tr><td>结构</td><td>先有表/列</td><td>无需 schema</td></tr>
+      <tr><td>身份</td><td>本地 PK</td><td>全局 IRI</td></tr>
+      <tr><td>完整性</td><td>NOT NULL 缺值非法</td><td>只说已知,可残缺</td></tr>
+      <tr><td>缺失语义</td><td>缺 = 没有/NULL</td><td>缺 = 未断言(开放)</td></tr>
+      <tr><td>演化</td><td>ALTER TABLE(重)</td><td>直接追加(轻)</td></tr>
+      <tr><td>查询</td><td>SQL(闭世界)</td><td>SPARQL + 推理(开放)</td></tr>
+    </tbody>
+  </table>
+
+  <h2><span class="num">06</span>供应链计划示例</h2>
+  <div class="triple"><span class="kw">:order-1042</span> <span class="p">a</span> <span class="kw">:Order</span> .
+<span class="kw">:order-1042</span> <span class="p">:requiresProduct</span> <span class="o">:sku-447</span> .
+<span class="kw">:sku-447</span> <span class="p">:hasLeadTime</span> <span class="o">"14"^^xsd:integer</span> .
+<span class="kw">:sku-447</span> <span class="p">:hasSupplier</span> <span class="o">:us-plants</span> .
+<span class="kw">:forecast-jun</span> <span class="p">:targetsProduct</span> <span class="o">:sku-447</span> .
+<span class="kw">:line-7</span> <span class="p">:hasCapacity</span> <span class="o">1200</span> .</div>
+
+  <hr class="rule">
+  <div class="ask-agent">
+    <span class="tag">有疑问?</span>
+    <p>用词或语法拿不准,直接问 agent;若某术语你已经能熟练使用,我会把它收录进<a href="glossary.html">术语表</a>。</p>
+  </div>
+</main>
+</body>
+</html>

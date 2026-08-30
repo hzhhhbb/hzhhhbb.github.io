@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>0001 · 本体是什么 —— 从关系表到三元组</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=Newsreader:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main class="lesson">
+
+  <p class="kicker">Lesson 01 · 入门</p>
+  <h1 class="title">本体是什么</h1>
+  <p class="subtitle">从关系表到三元组 —— 一次需要"卸载"的范式跃迁</p>
+
+  <p class="lede">你已经会建模了:实体-关系图(Entity-Relationship, 简称 ER)、关系表、行与列、外键、对象与数据库表的映射。所以这一课 <strong>不教你画更漂亮的图</strong>——而是帮你退一步,看清本体跟关系 schema 真正不同的那一件事。它不是一个更复杂的模型,而是<strong>一种不同的断言方式</strong>。</p>
+
+  <hr class="rule">
+
+  <!-- ================= 1 ================= -->
+  <h2><span class="num">01</span>你已有的心智模型</h2>
+  <p>作为工程师,你习惯用 <strong>表 + 行 + 外键</strong> 表达一个领域。一张 <code>Product</code> 表、一张 <code>Order</code> 表,用 <code>product_id</code> 关联。这套模型的隐含承诺是:</p>
+
+  <div class="callout">
+    <span class="tag">关系数据库的默认</span>
+    <p>每一行都要<strong>落在既定结构里</strong>;某个 <code>NOT NULL</code> 列没有值,这一行就<strong>插不进去</strong>。查不到记录,就当作"没有"。这是<em>闭世界</em>的思维。</p>
+  </div>
+
+  <p>这套思维极其强大,<strong>但在"知识"这件事上是件天花板</strong>:它要求你<strong>先定好形状</strong>,再往里填数据;<strong>填不进去的,就得改表</strong>。而真实世界——尤其是供应链计划——充满了"我们还不确定、但有约束、能推理"的知识。</p>
+
+  <!-- ================= 2 ================= -->
+  <h2><span class="num">02</span>一句话定义</h2>
+  <p>知识工程界最常被引用的定义,来自 Tom Gruber(1993):</p>
+
+  <div class="keypoint">
+    <span class="tag">Gruber 定义</span>
+    <p>一个本体是对一项<strong>共享概念化</strong>(conceptualization)的<strong>显式说明</strong>。<a class="cite" href="#ref1">[1]</a></p>
+  </div>
+
+  <p>拆开这四个词,它其实在说:</p>
+
+  <table>
+    <thead><tr><th>词</th><th>它排除掉的对照物</th><th>在说</th></tr></thead>
+    <tbody>
+      <tr><td><strong>共享</strong></td><td>你私有的实现细节</td><td>大家<strong>认同</strong>的一套概念,供复用</td></tr>
+      <tr><td><strong>概念化</strong></td><td>数据存哪、怎么存</td><td>世界里<strong>有哪些类的东西、如何关联</strong></td></tr>
+      <tr><td><strong>显式</strong></td><td>藏在代码里的约定</td><td>用<strong>正式语言</strong>写清楚,人机都读得懂</td></tr>
+      <tr><td><strong>说明</strong></td><td>模糊的领域口语</td><td>一份<strong>独立成文</strong>的规范,而非散落注释</td></tr>
+    </tbody>
+  </table>
+
+  <div class="sidenote">
+    <strong>对你意味着什么:</strong>本体不是"更严谨的关系模型",而是把注意力从<strong>"数据怎么存"</strong>挪到<strong>"这个世界是怎么一回事"</strong>。这正是知识工程里本体的用途。
+  </div>
+
+  <!-- ================= 3 ================= -->
+  <h2><span class="num">03</span>本体的四件套</h2>
+  <p>一个本体由四件事构成:<strong>类(class)</strong>、<strong>属性/关系(property)</strong>、<strong>个体(individual)</strong>、以及建立在它们之上的<strong>约束与推理</strong>。用你的供应链计划领域看一眼:</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 214" width="100%" role="img" aria-label="类层级示例:Product 下分类 Material 与 FinishedGood,sku-447 是 FinishedGood 的个体">
+      <defs>
+        <style>
+          .node { fill: var(--paper-elev); stroke: var(--ink); stroke-width: 1.4; }
+          .ind  { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+          .lbl  { font-family: var(--font-body); font-size: 15px; fill: var(--ink); }
+          .rel  { stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+          .relt { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); }
+        </style>
+      </defs>
+      <!-- class Product -->
+      <rect class="node" x="200" y="18" width="160" height="44" rx="8"/>
+      <text class="lbl" x="280" y="45" text-anchor="middle">Product</text>
+      <!-- subclass Material -->
+      <rect class="node" x="40"  y="120" width="150" height="40" rx="8"/>
+      <text class="lbl" x="115" y="145" text-anchor="middle">Material</text>
+      <!-- subclass FinishedGood -->
+      <rect class="node" x="250" y="120" width="190" height="40" rx="8"/>
+      <text class="lbl" x="345" y="145" text-anchor="middle">FinishedGood</text>
+      <!-- subclass edges -->
+      <line class="rel" x1="250" y1="62" x2="150" y2="120"/>
+      <line class="rel" x1="310" y1="62" x2="320" y2="120"/>
+      <text class="relt" x="180" y="88">⊑</text>
+      <text class="relt" x="322" y="88">⊑</text>
+      <!-- individual sku-447 -->
+      <rect class="ind" x="300" y="176" width="150" height="38" rx="19"/>
+      <text class="lbl" x="375" y="200" text-anchor="middle">sku-447</text>
+      <!-- instanceOf edge (dashed) -->
+      <line class="rel" x1="345" y1="160" x2="350" y2="176"/>
+      <text class="relt" x="352" y="172">instanceOf</text>
+    </svg>
+    <p class="figcap">图 1 · <code>Material</code> 与 <code>FinishedGood</code> 都是 <code>Product</code> 的子类(⊑);<code>sku-447</code> 是 <code>FinishedGood</code> 的一个<strong>个体</strong>。</p>
+  </div>
+
+  <ul>
+    <li><strong>类</strong> <code>Product</code> —— 一个概念的集合,<em>要被实例化</em>,不是一张表。</li>
+    <li><strong>子类</strong> <code>FinishedGood ⊑ Product</code> —— 子类的每个个体<strong>自动</strong>也是父类的个体,这是推理的种子。</li>
+    <li><strong>个体</strong> <code>sku-447</code> —— 世界里的那"一个东西",不是一行记录。</li>
+    <li><strong>属性/关系</strong> —— 把个体连起来(见下)。</li>
+  </ul>
+
+  <!-- ================= 4 ================= -->
+  <h2><span class="num">04</span>三元组:最小的陈述</h2>
+  <p>在本体里,一切知识都是 <code>主语 谓词 宾语</code> 这种<strong>三元组</strong>。<strong>每条三元组断言一条事实</strong>。先看它在供应链计划里长什么样:</p>
+
+  <div class="triple"><span class="s">:order-1042</span> <span class="p">a</span> <span class="kw">:Order</span> ;            <span class="c"># 1024 号订单,是个「订单」</span>
+<span class="s">:order-1042</span> <span class="p">:requiresProduct</span> <span class="o">:sku-447</span> .  <span class="c"># 它需要物料 447</span>
+<span class="s">:sku-447</span> <span class="p">:hasLeadTime</span> <span class="o">"14"</span> .           <span class="c"># 447 的提前期是 14</span>
+<span class="s">:forecast-jun</span> <span class="p">:targetsProduct</span> <span class="o">:sku-447</span> .  <span class="c"># 六月预测指向 447</span></div>
+  <p class="note-caption">Turtle 语法:每个被空格分开的 <code>x y z</code> 都是一个三元组。前缀 <code>:</code> 是本体的命名空间。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 560 196" width="100%" role="img" aria-label="三元组图:order-1042 需要 sku-447,sku-447 提前期 14 天">
+      <defs>
+        <style>
+          .node { fill: var(--paper-elev); stroke: var(--ink); stroke-width: 1.4; rx: 8; }
+          .lit  { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+          .lbl  { font-family: var(--font-body); font-size: 14px; fill: var(--ink); }
+          .edge { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+          .et   { font-family: var(--font-mono); font-size: 11px; fill: var(--accent); }
+        </style>
+      </defs>
+      <rect class="node" x="40"  y="78" width="150" height="40" rx="8"/>
+      <text class="lbl" x="115" y="103" text-anchor="middle">order-1042</text>
+      <rect class="node" x="300" y="30" width="150" height="40" rx="8"/>
+      <text class="lbl" x="375" y="55" text-anchor="middle">sku-447</text>
+      <rect class="lit"  x="330" y="140" width="120" height="36" rx="18"/>
+      <text class="lbl" x="390" y="163" text-anchor="middle">"14" 天</text>
+      <!-- requiresProduct -->
+      <line class="edge" x1="190" y1="95" x2="300" y2="55"/>
+      <text class="et" x="228" y="70">requiresProduct</text>
+      <!-- hasLeadTime -->
+      <line class="edge" x1="375" y1="70" x2="388" y2="140"/>
+      <text class="et" x="394" y="108">hasLeadTime</text>
+    </svg>
+    <p class="figcap">图 2 · 一汪事实的图:订单需要物料,物料有提前期。每条箭头=一条三元组。</p>
+  </div>
+
+  <p>注意这里的<strong>语法即语义</strong>——三元组本身就是一句话,不需要你预先定义"哪个表、哪一列"。想新增一条知识?<strong>再加一个三元组</strong>即可,不必改表结构。</p>
+
+  <!-- ================= 5 ================= -->
+  <h2><span class="num">05</span>关键一跃:闭世界 vs 开放世界</h2>
+  <p>这是你作为工程师<strong>最需要"卸载"的一次</strong>。关系数据库是<strong>闭世界</strong>:没存的就是没有。本体是<strong>开放世界</strong>:我<strong>没说的</strong> ≠ <strong>不成立</strong>,它只是"我还不确定"。</p>
+
+  <table>
+    <thead><tr><th></th><th>关系 schema(闭世界)</th><th>本体(开放世界)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>缺值</strong></td><td>插不进去 / 视为不存在</td><td>允许;<strong>不知道</strong> 也是合法状态</td></tr>
+      <tr><td><strong>查无</strong></td><td>就是没有</td><td>可能是"尚未断言"</td></tr>
+      <tr><td><strong>推理</strong></td><td>基本不做</td><td>可从已知推出未写的事实</td></tr>
+      <tr><td><strong>一致性</strong></td><td>约束强制,违反即报错</td><td>允许暂时的"矛盾/未决",交给推理器</td></tr>
+    </tbody>
+  </table>
+
+  <div class="keypoint">
+    <span class="tag">这就是差别</span>
+    <p>关系模型回答:<strong>"这个值该存进哪个表哪一列?"</strong>本体回答:<strong>"这句话在这个世界里是真的、假的、还是暂时未知?"</strong>前者规划<em>存储</em>;后者表达<em>事实</em>并允许<em>推理</em>。<a class="cite" href="#ref3">[3]</a></p>
+  </div>
+
+  <p>例子:供应链(Supply Chain, 简称 SC)系统里某产线的产能 <code>capacity</code> 今天还没定值。关系表忍不了——得给个默认或填个 0(扭曲语义);本体里你只需<strong>不断言这条</strong>,以后补上即可,系统照常知道"有这条属性、只是还未知"。</p>
+
+  <!-- ================= 6 ================= -->
+  <h2><span class="num">06</span>这跟检索增强生成(RAG)有什么关系</h2>
+  <p>扯回你的使命。检索增强生成(Retrieval-Augmented Generation, 简称 RAG)的痛点是:<strong>大模型不懂你的领域词汇、检索到的是碎块、无法保证一致性</strong>。一个本体能提供:</p>
+
+  <ul>
+    <li><strong>统一词汇</strong> —— 大家都用 <code>Product</code> / <code>LeadTime</code>,而不是"商品"/"备货期"各说各话。</li>
+    <li><strong>结构化知识图</strong> —— 把它落到图上,检索拿回的是<strong>事实与关系</strong>,而非孤立文本片段。</li>
+    <li><strong>约束与推理</strong> —— 用约束约束提示/输出,用推理补全未言明的事实。</li>
+  </ul>
+
+  <p>近两年的研究(如 OG-RAG、OntoRAG)正是把本体接进检索增强生成,以降低幻觉、提升领域一致性。<a class="cite" href="#ref6">[6]</a><a class="cite" href="#ref7">[7]</a> 这一课只是打了个底,后面几课我们会具体拆"怎么把供应链计划领域建成本体、再接进检索增强生成"。</p>
+
+  <!-- ================= quiz ================= -->
+  <h2><span class="num">07</span>检查你的理解</h2>
+  <p>三题小测,马上反馈。每题四个字左右,别靠猜,试着<strong>先想再点</strong>——这正是把知识变成记忆的时刻。</p>
+
+  <div class="quiz">
+    <p class="quiz-q">在知识工程里,「本体」最接近下面哪一句?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-correct="true" data-fb="对——它是「共享概念化」的显式说明,重在描述世界如何,而非数据存哪。">共享概念化规范</button>
+      <button class="opt" data-fb="不是。表存储是闭世界的。本体描述「世界怎样」,不含存储方式。">关系数据存储表</button>
+      <button class="opt" data-fb="也算不上。对象关系映射(Object-Relational Mapping, 简称 ORM)是对象到表的映射,本体是独立于实现的概念规范。">对象映射代码层</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">关系表的 NOT NULL 列缺值时会被拒绝。这背后是哪种假设?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="错了。开放世界接受「未知」是合法状态,不会因缺值拒绝。">开放世界:缺值=未知</button>
+      <button class="opt" data-correct="true" data-fb="对。闭世界把「没存」当成「不存在」——这正是关系数据库的默认。">闭世界:缺值=不存在</button>
+      <button class="opt" data-fb="不对。不是按列混用,是两种范式整体选择。">两者混合:依列而定</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <div class="quiz">
+    <p class="quiz-q">要表达「库存单元(Stock Keeping Unit, 简称 SKU)-447 的提前期是 14 天」,哪个三元组正确?</p>
+    <div class="quiz-opts">
+      <button class="opt" data-fb="顺序错了。三元组是「主语 谓词 宾语」,谓词不能放最前。">hasLeadTime sku-447 "14"</button>
+      <button class="opt" data-fb="顺序错了。宾语在最后,「14」是提前期值,不是主语。">"14" hasLeadTime sku-447</button>
+      <button class="opt" data-correct="true" data-fb="对——主语是 sku-447,谓词是 hasLeadTime,宾语是「14」。">sku-447 hasLeadTime "14"</button>
+    </div>
+    <p class="quiz-fb" hidden></p>
+  </div>
+
+  <!-- ================= primary source ================= -->
+  <a class="primary-source" href="https://protege.stanford.edu/publications/ontology_development/ontology101.pdf" target="_blank" rel="noopener">
+    <span class="ps-label">本课主来源 · 值得一读</span>
+    <span class="ps-title">Ontology Development 101 —— Noy &amp; McGuinness</span>
+    <span class="ps-url">protege.stanford.edu</span>
+    <span class="ps-why">用 30 分钟读完,你会看到"为什么、何时、以及怎么建一个本体"的完整答案;也是继续往下几课的理想铺垫。</span>
+  </a>
+  <p style="font-size:0.9em;color:var(--muted)">想更工程化、更贴近数据建模的深读?见 <a href="https://dl.acm.org/doi/book/10.1145/3382097" target="_blank" rel="noopener">Semantic Web for the Working Ontologist</a>(Allemang &amp; Hendler)。</p>
+
+  <!-- ================= refs ================= -->
+  <hr class="rule">
+  <div class="refs">
+    <p id="ref1">[1] Gruber, T. R. (1993). <em>A translation approach to portable ontology specifications.</em></p>
+    <p id="ref3">[3] (Applied Ontology) <em>Ontology and database schema: What's the difference?</em> — 系统对比本体与 schema 的 25 个特征。</p>
+    <p id="ref6">[6] OG-RAG: Ontology-grounded Retrieval-Augmented Generation for Large Language Models(2025;收录于 EMNLP,即 Empirical Methods in Natural Language Processing 自然语言处理实证方法会议)。</p>
+    <p id="ref7">[7] OntoRAG: Ontology-Driven RAG(开源框架)。</p>
+  </div>
+
+  <!-- ================= ask agent ================= -->
+  <div class="ask-agent">
+    <span class="tag">有疑问?问 agent</span>
+    <p>这一课允许你只抓住<strong>一个核心直觉</strong>:本体的天职是<strong>表达世界如何、允许推理</strong>,而非规定数据存哪。哪里卡住、或想把某个例子落到你的真实业务,直接问我。</p>
+  </div>
+
+  <!-- ================= footer ================= -->
+  <nav class="lesson-foot">
+    <a href="../reference/glossary.html">← 术语表</a>
+    <a class="next" href="../reference/glossary.html">下一课:类、属性与推理(待续)→</a>
+  </nav>
+
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

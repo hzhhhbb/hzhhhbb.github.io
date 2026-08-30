@@ -1,0 +1,15 @@
+# docker-compose.yml —— 一键起 PostgreSQL,并把 schema/seed 自动初始化
+# 启动:  docker compose up -d db
+services:
+  db:
+    image: postgres:16
+    container_name: scdb
+    environment:
+      POSTGRES_USER: sc
+      POSTGRES_PASSWORD: sc
+      POSTGRES_DB: scdb
+    ports:
+      - "5432:5432"
+    volumes:
+      # 挂载后,首次启动会自动依次执行 init 脚本建表并灌数据
+      - ./db:/docker-entrypoint-initdb.d
